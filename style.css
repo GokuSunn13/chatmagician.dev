@@ -1,0 +1,634 @@
+body {
+    margin: 0;
+    padding: 0;
+    font-family: Arial, Helvetica, sans-serif;
+    background-color: rgb(18, 18, 20);
+    width: 100%;
+    height: auto;
+}
+
+.info_icon {
+    position: fixed;
+    top: 10px;
+    left: 10px;
+    font-size: 24px;
+    cursor: pointer;
+    z-index: 1000;
+    position: relative;
+    display: inline-block;
+}
+
+.info_icon .tooltip {
+    visibility: hidden;
+    width: 250px;
+    background-color: rgba(34, 34, 34, 0.95);
+    color: #f1f1f1;
+    text-align: left;
+    border-radius: 8px;
+    padding: 15px;
+    position: absolute;
+    z-index: 1001;
+    left: 40px;
+    top: -10px;
+    border: 2px solid rgb(50, 50, 50);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+    opacity: 0;
+    transition: opacity 0.3s;
+    font-size: 12px;
+    line-height: 1.6;
+}
+
+.info_icon:hover > .tooltip {
+    visibility: visible;
+    opacity: 1;
+}
+
+.tooltip_title {
+    font-weight: bold;
+    margin-bottom: 12px;
+    color: #fbf724;
+    border-bottom: 1px solid rgb(50, 50, 50);
+    padding-bottom: 8px;
+}
+
+.tooltip_item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 6px 0;
+}
+
+.color_box {
+    width: 12px;
+    height: 12px;
+    border-radius: 2px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+#logo{
+    height: auto;
+    display: inline-block;
+}
+
+#chat_editor {
+    display: inline-block;
+    width: 100%;
+    height: auto;
+    margin-top: 20px;
+    align-items: center;
+}
+
+#settings_container {
+    display: flex;
+    gap: 15px;
+    justify-content: center;
+    margin-bottom: 15px;
+    flex-wrap: wrap;
+}
+
+#settings_container div {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+#settings_container label {
+    color: white;
+    font-weight: bold;
+    font-size: 0.85em;
+}
+
+#settings_container input[type="number"] {
+    width: 60px;
+    padding: 5px;
+    background-color: rgba(22, 22, 22, 0.795);
+    color: white;
+    border: 2px solid rgb(34, 34, 34);
+    border-radius: 5px;
+    outline: none;
+}
+
+#font_size_display {
+    color: rgb(150, 150, 150);
+    min-width: 50px;
+}
+
+#settings_container input[type="color"] {
+    width: 50px;
+    height: 35px;
+    border: 2px solid rgb(34, 34, 34);
+    border-radius: 5px;
+    cursor: pointer;
+    background-color: rgba(22, 22, 22, 0.795);
+}
+
+#settings_container select {
+    padding: 5px 8px;
+    background-color: rgba(22, 22, 22, 0.795);
+    color: white;
+    border: 2px solid rgb(34, 34, 34);
+    border-radius: 5px;
+    outline: none;
+    cursor: pointer;
+    font-size: 0.85em;
+    width: 60%;
+}
+
+/* Custom checkbox styling */
+input[type="checkbox"] {
+    appearance: none;
+    -webkit-appearance: none;
+    width: 18px;
+    height: 18px;
+    background-color: rgba(22, 22, 22, 0.795);
+    border: 2px solid rgb(34, 34, 34);
+    border-radius: 4px;
+    cursor: pointer;
+    position: relative;
+    vertical-align: middle;
+    margin-right: 5px;
+    transition: background-color 0.2s, border-color 0.2s;
+}
+
+input[type="checkbox"]:checked {
+    background-color: rgb(40, 80, 120);
+    border-color: rgb(50, 100, 150);
+}
+
+input[type="checkbox"]:checked::after {
+    content: '✓';
+    position: absolute;
+    color: white;
+    font-size: 12px;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+
+input[type="checkbox"]:hover {
+    border-color: rgb(60, 60, 60);
+}
+
+/* Custom file button */
+.file-button {
+    padding: 8px 15px;
+    background-color: rgb(34, 34, 34);
+    color: white;
+    border: 2px solid rgb(50, 50, 50);
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 0.9em;
+    transition: background-color 0.3s;
+    max-width: 180px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.file-button:hover {
+    background-color: rgb(50, 50, 50);
+}
+
+#input_container {
+    /* overflow-x: hidden;
+    resize: both;
+    display: inline-block; */
+
+    padding: 0;
+    margin: 0;
+    white-space: nowrap;
+  
+    width: 1000px;
+    height: 450px;
+    min-width: 600px;
+    max-width: 60%;
+    min-height: 200px;
+    max-height: 600px;
+}
+
+#input_container > textarea {
+    width: 100%;
+    height: 100%;
+    box-sizing: border-box;
+    margin: 0;
+    outline: none;
+    border-radius: 10px;
+    border: 2px solid rgb(34, 34, 34);
+    padding: 10px;
+    background-color: rgba(22, 22, 22, 0.795);
+    color: white;
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 1em;
+    resize: none;
+    overflow-y: auto;
+}
+
+#preview_container {
+    margin-top: 20px;
+    padding: 20px 10px 10px 10px;
+}
+
+#preview_canvas {
+    display: block;
+    min-width: 400px;
+    min-height: 100px;
+    background: #222;
+}
+
+#button_container {
+    margin: 10px 0;
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+#button_container button {
+    background-color: rgb(34, 34, 34);
+    color: white;
+    border: 2px solid rgb(50, 50, 50);
+    padding: 6px 12px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 0.85em;
+    transition: background-color 0.3s;
+}
+
+#button_container button:hover {
+    background-color: rgb(50, 50, 50);
+}
+
+#chat_container {
+    width: 100%;
+    max-width: 60%;
+    min-width: 600px;
+    margin-top: 20px;
+    max-height: 600px;
+    overflow-y: auto;
+}
+
+#chat_messages {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    padding: 15px;
+}
+
+.chat_message {
+    display: flex;
+    justify-content: flex-start;
+}
+
+.chat_message img {
+    max-width: 100%;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+/* Clear button */
+#clear_bg_image {
+    padding: 8px 15px;
+    background-color: rgb(34, 34, 34);
+    color: white;
+    border: 2px solid rgb(50, 50, 50);
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 0.9em;
+    transition: background-color 0.3s;
+}
+
+#clear_bg_image:hover {
+    background-color: rgb(50, 50, 50);
+}
+
+#dwnl_img {
+    background-color: rgb(60, 60, 120) !important;
+}
+
+#dwnl_img:hover {
+    background-color: rgb(80, 80, 150) !important;
+}
+
+/* Image size controls */
+#image_size_controls {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    margin-top: 10px;
+    margin-bottom: 8px;
+}
+
+#image_size_controls label {
+    color: white;
+    font-weight: bold;
+    font-size: 0.85em;
+}
+
+#image_size_controls span {
+    color: white;
+    font-size: 0.85em;
+}
+
+#image_size_controls input[type="number"] {
+    width: 60px;
+    padding: 4px;
+    background-color: rgba(22, 22, 22, 0.795);
+    color: white;
+    border: 2px solid rgb(34, 34, 34);
+    border-radius: 5px;
+    outline: none;
+    font-size: 0.85em;
+}
+
+#image_size_controls button {
+    padding: 5px 10px;
+    background-color: rgb(34, 34, 34);
+    color: white;
+    border: 2px solid rgb(50, 50, 50);
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 0.8em;
+    transition: background-color 0.3s;
+}
+
+#image_size_controls button:hover {
+    background-color: rgb(50, 50, 50);
+}
+
+#apply_size {
+    background-color: rgb(40, 80, 120) !important;
+}
+
+#apply_size:hover {
+    background-color: rgb(50, 100, 150) !important;
+}
+
+/* Image effects controls */
+#image_effects_controls {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    margin-top: 8px;
+    margin-bottom: 10px;
+    padding: 8px;
+    background-color: rgba(30, 30, 30, 0.8);
+    border-radius: 8px;
+    border: 2px solid rgb(34, 34, 34);
+    width: 1000px;
+    max-width: 60%;
+    box-sizing: border-box;
+}
+
+.effect-row {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+}
+
+.effect-row label {
+    color: white;
+    font-size: 0.8em;
+    white-space: nowrap;
+}
+
+.effect-row label span {
+    color: #fbf724;
+    font-weight: bold;
+}
+
+.effect-row input[type="range"] {
+    width: 80px;
+    cursor: pointer;
+    accent-color: #fbf724;
+}
+
+#reset_effects {
+    padding: 5px 10px;
+    background-color: rgb(80, 40, 40);
+    color: white;
+    border: 2px solid rgb(100, 50, 50);
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 0.8em;
+    transition: background-color 0.3s;
+}
+
+#reset_effects:hover {
+    background-color: rgb(100, 50, 50);
+}
+
+/* Text blocks container */
+#text_blocks_container {
+    width: 1000px;
+    max-width: 60%;
+    margin: 10px auto;
+    padding: 10px;
+    background-color: rgba(30, 30, 30, 0.8);
+    border: 2px solid rgb(34, 34, 34);
+    border-radius: 8px;
+    box-sizing: border-box;
+}
+
+#text_blocks_list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-bottom: 8px;
+}
+
+.text-block-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    padding: 8px;
+    background-color: rgba(40, 40, 40, 0.8);
+    border: 2px solid rgb(50, 50, 50);
+    border-radius: 5px;
+    cursor: pointer;
+    transition: border-color 0.2s;
+}
+
+.text-block-item.selected {
+    border-color: #fbf724;
+}
+
+.text-block-item:hover {
+    border-color: rgb(80, 80, 80);
+}
+
+.text-block-item.selected:hover {
+    border-color: #fbf724;
+}
+
+.text-block-label {
+    color: #fbf724;
+    font-weight: bold;
+    font-size: 0.8em;
+    min-width: 45px;
+    padding-top: 5px;
+}
+
+.text-block-input {
+    flex: 1;
+    min-height: 50px;
+    padding: 6px;
+    background-color: rgba(22, 22, 22, 0.795);
+    color: white;
+    border: 2px solid rgb(34, 34, 34);
+    border-radius: 5px;
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 0.85em;
+    resize: vertical;
+    outline: none;
+}
+
+.text-block-input:focus {
+    border-color: rgb(60, 60, 60);
+}
+
+.text-block-delete {
+    padding: 4px 8px;
+    background-color: rgb(80, 40, 40);
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 1em;
+    line-height: 1;
+    transition: background-color 0.2s;
+}
+
+.text-block-delete:hover {
+    background-color: rgb(120, 50, 50);
+}
+
+#add_text_block {
+    width: 100%;
+    padding: 8px;
+    background-color: rgb(40, 80, 40);
+    color: white;
+    border: 2px solid rgb(50, 100, 50);
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 0.85em;
+    transition: background-color 0.2s;
+}
+
+#add_text_block:hover {
+    background-color: rgb(50, 100, 50);
+}
+
+/* Images list styles */
+#images_container {
+    width: 1000px;
+    max-width: 60%;
+    min-width: 600px;
+    margin: 10px auto;
+    background-color: rgba(22, 22, 22, 0.795);
+    border: 2px solid rgb(34, 34, 34);
+    border-radius: 8px;
+    padding: 10px;
+    box-sizing: border-box;
+}
+
+#images_list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 8px;
+}
+
+.image-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 10px;
+    background-color: rgba(40, 40, 40, 0.8);
+    border: 2px solid rgb(50, 50, 50);
+    border-radius: 5px;
+    cursor: pointer;
+    transition: border-color 0.2s;
+}
+
+.image-item.selected {
+    border-color: #00aaff;
+}
+
+.image-item:hover {
+    border-color: rgb(80, 80, 80);
+}
+
+.image-item.selected:hover {
+    border-color: #00aaff;
+}
+
+.image-item-label {
+    color: #00aaff;
+    font-weight: bold;
+    font-size: 0.8em;
+}
+
+.image-item-delete {
+    padding: 2px 6px;
+    background-color: rgb(80, 40, 40);
+    color: white;
+    border: none;
+    border-radius: 3px;
+    cursor: pointer;
+    font-size: 0.9em;
+    line-height: 1;
+    transition: background-color 0.2s;
+}
+
+.image-item-delete:hover {
+    background-color: rgb(120, 50, 50);
+}
+
+/* Image add container */
+#image_add_container {
+    width: 1000px;
+    max-width: 60%;
+    min-width: 600px;
+    margin: 10px auto;
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    align-items: center;
+}
+
+#image_add_container .file-button {
+    padding: 8px 16px;
+    background-color: rgb(40, 80, 40);
+    color: white;
+    border: 2px solid rgb(50, 100, 50);
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 0.9em;
+    transition: background-color 0.2s;
+}
+
+#image_add_container .file-button:hover {
+    background-color: rgb(50, 100, 50);
+}
+
+#clear_all_images {
+    padding: 8px 16px;
+    background-color: rgb(80, 40, 40);
+    color: white;
+    border: 2px solid rgb(100, 50, 50);
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 0.9em;
+    transition: background-color 0.2s;
+}
+
+#clear_all_images:hover {
+    background-color: rgb(100, 50, 50);
+}
+#reset_crop:hover {
+    background-color: rgb(80, 80, 80);
+}
