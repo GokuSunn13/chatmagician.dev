@@ -20,7 +20,9 @@
                 <div class="tooltip_title" style="margin-top: 12px;">Skróty klawiszowe</div>
                 <div class="tooltip_item">🖱️ <b>LPM</b> na tekście → Przeciągnij tekst</div>
                 <div class="tooltip_item">🖱️ <b>PPM</b> lub <b>Shift + LPM</b> → Przeciągnij obraz</div>
-                <div class="tooltip_item">🖱️ <b>Ctrl + LPM</b> + przeciągnij → Kadruj obraz</div>
+                <div class="tooltip_item">🖱️ <b>Ctrl + LPM</b> + przeciągnij → Kadruj obraz (prostokąt)</div>
+                <div class="tooltip_item">🖱️ <b>Ctrl + Shift + LPM</b> + przeciągnij → Kadruj pod kątem</div>
+                <div class="tooltip_item">🖱️ <b>Scroll</b> podczas kadrowania pod kątem → Zmień stronę</div>
                 <div class="tooltip_item">🖱️ <b>Alt + Scroll</b> → Skaluj obraz</div>
             </div>
         </div>
@@ -193,6 +195,11 @@
             let isCropping = false;
             let cropStart = { x: 0, y: 0 };
             let cropEnd = { x: 0, y: 0 };
+            
+            // Angled crop state
+            let isAngledCropping = false;
+            let angledCropLine = { x1: 0, y1: 0, x2: 0, y2: 0 };
+            let angledCropSide = 'left'; // Which side to keep: 'left' or 'right' of the line
             
             // Multi-text state
             let textBlocks = [];
@@ -780,6 +787,73 @@
                         }
                     }
                     
+                    // Draw angled crop line if angled cropping
+                    if (isAngledCropping && selectedImageId) {
+                        const imgObj = images.find(i => i.id === selectedImageId);
+                        if (imgObj) {
+                            // Convert image coords to canvas coords
+                            const x1 = imgObj.x + (angledCropLine.x1 - imgObj.cropX) * imgObj.scale;
+                            const y1 = imgObj.y + (angledCropLine.y1 - imgObj.cropY) * imgObj.scale;
+                            const x2 = imgObj.x + (angledCropLine.x2 - imgObj.cropX) * imgObj.scale;
+                            const y2 = imgObj.y + (angledCropLine.y2 - imgObj.cropY) * imgObj.scale;
+                            
+                            // Calculate extended line to cover the whole canvas
+                            const dx = x2 - x1;
+                            const dy = y2 - y1;
+                            const len = Math.sqrt(dx * dx + dy * dy);
+                            if (len > 0) {
+                                const nx = -dy / len; // Normal vector (perpendicular)
+                                const ny = dx / len;
+                                
+                                // Extend line beyond canvas
+                                const extend = Math.max(previewCanvas.width, previewCanvas.height) * 2;
+                                const lineX1 = x1 - dx * extend;
+                                const lineY1 = y1 - dy * extend;
+                                const lineX2 = x2 + dx * extend;
+                                const lineY2 = y2 + dy * extend;
+                                
+                                // Draw semi-transparent overlay on the side to be removed
+                                ctx.fillStyle = 'rgba(255, 0, 0, 0.3)';
+                                ctx.beginPath();
+                                if (angledCropSide === 'left') {
+                                    // Shade left side of line
+                                    ctx.moveTo(lineX1, lineY1);
+                                    ctx.lineTo(lineX2, lineY2);
+                                    ctx.lineTo(lineX2 + nx * extend, lineY2 + ny * extend);
+                                    ctx.lineTo(lineX1 + nx * extend, lineY1 + ny * extend);
+                                } else {
+                                    // Shade right side of line
+                                    ctx.moveTo(lineX1, lineY1);
+                                    ctx.lineTo(lineX2, lineY2);
+                                    ctx.lineTo(lineX2 - nx * extend, lineY2 - ny * extend);
+                                    ctx.lineTo(lineX1 - nx * extend, lineY1 - ny * extend);
+                                }
+                                ctx.closePath();
+                                ctx.fill();
+                                
+                                // Draw the cut line
+                                ctx.strokeStyle = '#ff6600';
+                                ctx.lineWidth = 3;
+                                ctx.setLineDash([10, 5]);
+                                ctx.beginPath();
+                                ctx.moveTo(x1, y1);
+                                ctx.lineTo(x2, y2);
+                                ctx.stroke();
+                                ctx.setLineDash([]);
+                                
+                                // Draw start and end points
+                                ctx.fillStyle = '#00ff00';
+                                ctx.beginPath();
+                                ctx.arc(x1, y1, 6, 0, Math.PI * 2);
+                                ctx.fill();
+                                ctx.fillStyle = '#ff0000';
+                                ctx.beginPath();
+                                ctx.arc(x2, y2, 6, 0, Math.PI * 2);
+                                ctx.fill();
+                            }
+                        }
+                    }
+                    
                     // Apply grain effect
                     if (imageEffects.grain > 0) {
                         applyGrain(ctx, previewCanvas.width, previewCanvas.height, imageEffects.grain);
@@ -1036,8 +1110,28 @@
                 const mouseX = (e.clientX - rect.left) * scaleX;
                 const mouseY = (e.clientY - rect.top) * scaleY;
                 
-                // Ctrl+click to start cropping selected image
-                if (images.length > 0 && e.ctrlKey && e.button === 0 && selectedImageId) {
+                // Ctrl+Shift+click to start angled cropping
+                if (images.length > 0 && e.ctrlKey && e.shiftKey && e.button === 0 && selectedImageId) {
+                    const imgObj = images.find(i => i.id === selectedImageId);
+                    if (imgObj) {
+                        // Convert canvas coords to image coords
+                        const imgX = (mouseX - imgObj.x) / imgObj.scale;
+                        const imgY = (mouseY - imgObj.y) / imgObj.scale;
+                        
+                        // Start angled crop line from current mouse position
+                        isAngledCropping = true;
+                        angledCropLine.x1 = Math.max(0, Math.min(imgObj.origW, imgObj.cropX + imgX));
+                        angledCropLine.y1 = Math.max(0, Math.min(imgObj.origH, imgObj.cropY + imgY));
+                        angledCropLine.x2 = angledCropLine.x1;
+                        angledCropLine.y2 = angledCropLine.y1;
+                        angledCropSide = 'left'; // Default to removing left side
+                        e.preventDefault();
+                        return;
+                    }
+                }
+                
+                // Ctrl+click (without shift) to start rectangular cropping selected image
+                if (images.length > 0 && e.ctrlKey && !e.shiftKey && e.button === 0 && selectedImageId) {
                     const imgObj = images.find(i => i.id === selectedImageId);
                     if (imgObj) {
                         // Convert canvas coords to image coords
@@ -1153,8 +1247,16 @@
                 }
             });
             
-            // Mouse wheel + Alt to scale selected image
+            // Mouse wheel + Alt to scale selected image, or scroll during angled crop to toggle side
             previewCanvas.addEventListener('wheel', function(e) {
+                // During angled cropping, scroll to toggle which side to remove
+                if (isAngledCropping) {
+                    e.preventDefault();
+                    angledCropSide = angledCropSide === 'left' ? 'right' : 'left';
+                    updatePreview();
+                    return;
+                }
+                
                 if (!e.altKey) return; // Only scale when Alt is held
                 if (images.length === 0 || !selectedImageId) return;
                 
@@ -1199,7 +1301,21 @@
                 const mouseX = (e.clientX - rect.left) * scaleX;
                 const mouseY = (e.clientY - rect.top) * scaleY;
                 
-                // Handle cropping
+                // Handle angled cropping
+                if (isAngledCropping && selectedImageId) {
+                    const imgObj = images.find(i => i.id === selectedImageId);
+                    if (imgObj) {
+                        // Convert canvas coords to original image coords
+                        const imgX = (mouseX - imgObj.x) / imgObj.scale;
+                        const imgY = (mouseY - imgObj.y) / imgObj.scale;
+                        angledCropLine.x2 = Math.max(0, Math.min(imgObj.origW, imgObj.cropX + imgX));
+                        angledCropLine.y2 = Math.max(0, Math.min(imgObj.origH, imgObj.cropY + imgY));
+                        updatePreview();
+                    }
+                    return;
+                }
+                
+                // Handle rectangular cropping
                 if (isCropping && selectedImageId) {
                     const imgObj = images.find(i => i.id === selectedImageId);
                     if (imgObj) {
@@ -1245,7 +1361,79 @@
                 }
             });
             window.addEventListener('mouseup', function(e) {
-                // Finalize cropping
+                // Finalize angled cropping
+                if (isAngledCropping && selectedImageId) {
+                    const imgObj = images.find(i => i.id === selectedImageId);
+                    if (imgObj) {
+                        const x1 = angledCropLine.x1;
+                        const y1 = angledCropLine.y1;
+                        const x2 = angledCropLine.x2;
+                        const y2 = angledCropLine.y2;
+                        
+                        const lineLen = Math.sqrt((x2-x1)**2 + (y2-y1)**2);
+                        
+                        // Only apply if line is meaningful (at least 10px)
+                        if (lineLen >= 10) {
+                            // Create a new canvas to apply the angled crop
+                            const tempCanvas = document.createElement('canvas');
+                            tempCanvas.width = imgObj.origW;
+                            tempCanvas.height = imgObj.origH;
+                            const tempCtx = tempCanvas.getContext('2d');
+                            
+                            // Draw the original image
+                            tempCtx.drawImage(imgObj.img, 0, 0);
+                            
+                            // Calculate line direction and normal
+                            const dx = x2 - x1;
+                            const dy = y2 - y1;
+                            const len = Math.sqrt(dx * dx + dy * dy);
+                            const nx = -dy / len; // Normal vector
+                            const ny = dx / len;
+                            
+                            // Create clipping path for the side to keep
+                            const extend = Math.max(imgObj.origW, imgObj.origH) * 3;
+                            
+                            // Clear the side we want to remove
+                            tempCtx.globalCompositeOperation = 'destination-out';
+                            tempCtx.beginPath();
+                            
+                            // Extend line points
+                            const lineX1 = x1 - dx * extend;
+                            const lineY1 = y1 - dy * extend;
+                            const lineX2 = x2 + dx * extend;
+                            const lineY2 = y2 + dy * extend;
+                            
+                            if (angledCropSide === 'left') {
+                                // Remove left side (where normal points)
+                                tempCtx.moveTo(lineX1, lineY1);
+                                tempCtx.lineTo(lineX2, lineY2);
+                                tempCtx.lineTo(lineX2 + nx * extend, lineY2 + ny * extend);
+                                tempCtx.lineTo(lineX1 + nx * extend, lineY1 + ny * extend);
+                            } else {
+                                // Remove right side
+                                tempCtx.moveTo(lineX1, lineY1);
+                                tempCtx.lineTo(lineX2, lineY2);
+                                tempCtx.lineTo(lineX2 - nx * extend, lineY2 - ny * extend);
+                                tempCtx.lineTo(lineX1 - nx * extend, lineY1 - ny * extend);
+                            }
+                            tempCtx.closePath();
+                            tempCtx.fill();
+                            
+                            // Create new image from the result
+                            const newImg = new Image();
+                            newImg.onload = function() {
+                                imgObj.img = newImg;
+                                imgObj.x = 0;
+                                imgObj.y = 0;
+                                updatePreview();
+                            };
+                            newImg.src = tempCanvas.toDataURL();
+                        }
+                        updatePreview();
+                    }
+                }
+                
+                // Finalize rectangular cropping
                 if (isCropping && selectedImageId) {
                     const imgObj = images.find(i => i.id === selectedImageId);
                     if (imgObj) {
@@ -1274,6 +1462,7 @@
                 isDragging = false;
                 isImageDragging = false;
                 isCropping = false;
+                isAngledCropping = false;
             });
 
             // Text color selection handler
