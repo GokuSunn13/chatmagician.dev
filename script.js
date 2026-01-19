@@ -128,9 +128,9 @@ function applyGrain(ctx, width, height, intensity, grainBlur = 0) {
         const grainDensity = intensity / 100;
         
         for (let i = 0; i < grainData.length; i += 4) {
-            if (Math.random() < grainDensity * 0.3) {
+            if (Math.random() < grainDensity * 0.15) {
                 const grainType = Math.random();
-                const brightness = 20 + Math.random() * 40;
+                const brightness = 10 + Math.random() * 20;
                 
                 if (grainType < 0.4) {
                     grainData[i] = brightness;
@@ -149,7 +149,7 @@ function applyGrain(ctx, width, height, intensity, grainBlur = 0) {
                     grainData[i + 1] = brightness * 0.7;
                     grainData[i + 2] = 0;
                 }
-                grainData[i + 3] = 255; // Full opacity for grain dots
+                grainData[i + 3] = 180; // Reduced opacity for grain dots
             }
         }
         
@@ -201,9 +201,9 @@ function applyGrain(ctx, width, height, intensity, grainBlur = 0) {
         const grainDensity = intensity / 100;
         
         for (let i = 0; i < data.length; i += 4) {
-            if (Math.random() < grainDensity * 0.3) {
+            if (Math.random() < grainDensity * 0.15) {
                 const grainType = Math.random();
-                const brightness = 20 + Math.random() * 40;
+                const brightness = 10 + Math.random() * 20;
                 
                 if (grainType < 0.4) {
                     data[i] = Math.min(255, data[i] + brightness);
@@ -1001,7 +1001,7 @@ function createImageWithBackground() {
     
     // Apply grain effect
     if (imageEffects.grain > 0) {
-        applyGrain(ctx, canvas.width, canvas.height, imageEffects.grain);
+        applyGrain(ctx, canvas.width, canvas.height, imageEffects.grain, imageEffects.grainBlur);
     }
     
     // Draw all drawings
