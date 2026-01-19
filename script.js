@@ -86,6 +86,10 @@ let textBlocks = [];
 let selectedTextBlockId = null;
 let textBlockIdCounter = 0;
 
+// Alignment guides state
+let alignmentGuides = { horizontal: [], vertical: [] };
+const SNAP_THRESHOLD = 8; // pixels to snap
+
 // Drawing state
 let currentDrawingTool = null; // null, 'pencil', 'brush', 'eraser', 'line', 'rectangle', 'circle', 'arrow'
 let isDrawing = false;
@@ -650,6 +654,185 @@ function drawTextBlock(ctx, block) {
     }
 }
 
+// Helper to get text block bounds
+function getTextBlockBounds(ctx, block) {
+    ctx.font = `${settings.fontSize}px ${settings.fontFamily}`;
+    const lineHeight = settings.fontSize + 5;
+    let blockText = block.text;
+    if (processTextCheckbox.checked) {
+        blockText = processText(blockText);
+    }
+    const imageWidth = viewportSize.width;
+    const lines = wrapTextToWidth(ctx, blockText, block.x, imageWidth);
+    
+    let maxWidth = 0;
+    lines.forEach(line => {
+        const parsed = parseTextColor(line);
+        const w = ctx.measureText(parsed.text).width;
+        if (w > maxWidth) maxWidth = w;
+    });
+    const totalHeight = lines.length * lineHeight;
+    
+    return {
+        x: block.x,
+        y: block.y,
+        width: maxWidth,
+        height: totalHeight,
+        centerX: block.x + maxWidth / 2,
+        centerY: block.y + totalHeight / 2,
+        right: block.x + maxWidth,
+        bottom: block.y + totalHeight
+    };
+}
+
+// Calculate alignment guides for dragged text block
+function calculateAlignmentGuides(ctx, draggedBlockId) {
+    alignmentGuides = { horizontal: [], vertical: [] };
+    
+    if (!multiTextCheckbox.checked || textBlocks.length < 2) return;
+    
+    const draggedBlock = textBlocks.find(b => b.id === draggedBlockId);
+    if (!draggedBlock) return;
+    
+    const draggedBounds = getTextBlockBounds(ctx, draggedBlock);
+    
+    // Check alignment with other blocks
+    textBlocks.forEach(block => {
+        if (block.id === draggedBlockId) return;
+        
+        const otherBounds = getTextBlockBounds(ctx, block);
+        
+        // Horizontal alignments (Y positions)
+        // Top to top
+        if (Math.abs(draggedBounds.y - otherBounds.y) < SNAP_THRESHOLD) {
+            alignmentGuides.horizontal.push({ y: otherBounds.y, type: 'top' });
+        }
+        // Bottom to bottom
+        if (Math.abs(draggedBounds.bottom - otherBounds.bottom) < SNAP_THRESHOLD) {
+            alignmentGuides.horizontal.push({ y: otherBounds.bottom, type: 'bottom' });
+        }
+        // Center to center (horizontal)
+        if (Math.abs(draggedBounds.centerY - otherBounds.centerY) < SNAP_THRESHOLD) {
+            alignmentGuides.horizontal.push({ y: otherBounds.centerY, type: 'center' });
+        }
+        // Top to bottom
+        if (Math.abs(draggedBounds.y - otherBounds.bottom) < SNAP_THRESHOLD) {
+            alignmentGuides.horizontal.push({ y: otherBounds.bottom, type: 'edge' });
+        }
+        // Bottom to top
+        if (Math.abs(draggedBounds.bottom - otherBounds.y) < SNAP_THRESHOLD) {
+            alignmentGuides.horizontal.push({ y: otherBounds.y, type: 'edge' });
+        }
+        
+        // Vertical alignments (X positions)
+        // Left to left
+        if (Math.abs(draggedBounds.x - otherBounds.x) < SNAP_THRESHOLD) {
+            alignmentGuides.vertical.push({ x: otherBounds.x, type: 'left' });
+        }
+        // Right to right
+        if (Math.abs(draggedBounds.right - otherBounds.right) < SNAP_THRESHOLD) {
+            alignmentGuides.vertical.push({ x: otherBounds.right, type: 'right' });
+        }
+        // Center to center (vertical)
+        if (Math.abs(draggedBounds.centerX - otherBounds.centerX) < SNAP_THRESHOLD) {
+            alignmentGuides.vertical.push({ x: otherBounds.centerX, type: 'center' });
+        }
+        // Left to right
+        if (Math.abs(draggedBounds.x - otherBounds.right) < SNAP_THRESHOLD) {
+            alignmentGuides.vertical.push({ x: otherBounds.right, type: 'edge' });
+        }
+        // Right to left
+        if (Math.abs(draggedBounds.right - otherBounds.x) < SNAP_THRESHOLD) {
+            alignmentGuides.vertical.push({ x: otherBounds.x, type: 'edge' });
+        }
+    });
+}
+
+// Draw alignment guide lines
+function drawAlignmentGuides(ctx) {
+    if (alignmentGuides.horizontal.length === 0 && alignmentGuides.vertical.length === 0) return;
+    
+    ctx.save();
+    ctx.strokeStyle = '#00ffff';
+    ctx.lineWidth = 1;
+    ctx.setLineDash([5, 3]);
+    
+    // Draw horizontal guides
+    alignmentGuides.horizontal.forEach(guide => {
+        ctx.beginPath();
+        ctx.moveTo(0, guide.y);
+        ctx.lineTo(viewportSize.width, guide.y);
+        ctx.stroke();
+    });
+    
+    // Draw vertical guides
+    alignmentGuides.vertical.forEach(guide => {
+        ctx.beginPath();
+        ctx.moveTo(guide.x, 0);
+        ctx.lineTo(guide.x, viewportSize.height);
+        ctx.stroke();
+    });
+    
+    ctx.setLineDash([]);
+    ctx.restore();
+}
+
+// Apply snapping to text block position
+function applySnapping(ctx, block) {
+    const bounds = getTextBlockBounds(ctx, block);
+    
+    // Check other blocks for snapping
+    textBlocks.forEach(otherBlock => {
+        if (otherBlock.id === block.id) return;
+        
+        const otherBounds = getTextBlockBounds(ctx, otherBlock);
+        
+        // Vertical snapping (X)
+        // Left to left
+        if (Math.abs(bounds.x - otherBounds.x) < SNAP_THRESHOLD) {
+            block.x = otherBounds.x;
+        }
+        // Right to right
+        else if (Math.abs(bounds.right - otherBounds.right) < SNAP_THRESHOLD) {
+            block.x = otherBounds.right - bounds.width;
+        }
+        // Center to center
+        else if (Math.abs(bounds.centerX - otherBounds.centerX) < SNAP_THRESHOLD) {
+            block.x = otherBounds.centerX - bounds.width / 2;
+        }
+        // Left to right
+        else if (Math.abs(bounds.x - otherBounds.right) < SNAP_THRESHOLD) {
+            block.x = otherBounds.right;
+        }
+        // Right to left
+        else if (Math.abs(bounds.right - otherBounds.x) < SNAP_THRESHOLD) {
+            block.x = otherBounds.x - bounds.width;
+        }
+        
+        // Horizontal snapping (Y)
+        // Top to top
+        if (Math.abs(bounds.y - otherBounds.y) < SNAP_THRESHOLD) {
+            block.y = otherBounds.y;
+        }
+        // Bottom to bottom
+        else if (Math.abs(bounds.bottom - otherBounds.bottom) < SNAP_THRESHOLD) {
+            block.y = otherBounds.bottom - bounds.height;
+        }
+        // Center to center
+        else if (Math.abs(bounds.centerY - otherBounds.centerY) < SNAP_THRESHOLD) {
+            block.y = otherBounds.centerY - bounds.height / 2;
+        }
+        // Top to bottom
+        else if (Math.abs(bounds.y - otherBounds.bottom) < SNAP_THRESHOLD) {
+            block.y = otherBounds.bottom;
+        }
+        // Bottom to top
+        else if (Math.abs(bounds.bottom - otherBounds.y) < SNAP_THRESHOLD) {
+            block.y = otherBounds.y - bounds.height;
+        }
+    });
+}
+
 // Function to parse text and return {text, color}
 function parseTextColor(line) {
     // Check for custom color markup: [color=#hex]...[/color]
@@ -1009,6 +1192,12 @@ function updatePreview() {
                 const blockText = processTextCheckbox.checked ? processText(block.text) : block.text;
                 drawTextBlock(ctx, { ...block, text: blockText });
             });
+            
+            // Draw alignment guides when dragging
+            if (isDragging && selectedTextBlockId) {
+                calculateAlignmentGuides(ctx, selectedTextBlockId);
+                drawAlignmentGuides(ctx);
+            }
         } else {
             // Single text mode - use the main textarea
             drawTextBlock(ctx, { id: 0, text: text, x: textPosition.x, y: textPosition.y });
@@ -1906,6 +2095,11 @@ window.addEventListener('mousemove', function(e) {
     if (block) {
         block.x = mouseX - dragOffset.x;
         block.y = mouseY - dragOffset.y;
+        
+        // Apply snapping to other text blocks
+        const ctx = previewCanvas.getContext('2d');
+        applySnapping(ctx, block);
+        
         updatePreview();
     }
 });
@@ -2101,6 +2295,10 @@ window.addEventListener('mouseup', function(e) {
     isImageDragging = false;
     isCropping = false;
     isAngledCropping = false;
+    
+    // Clear alignment guides
+    alignmentGuides = { horizontal: [], vertical: [] };
+    updatePreview();
 });
 
 // Text color selection handler
