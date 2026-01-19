@@ -1,6 +1,8 @@
 // --- DOM Elements ---
 const frameInput = document.getElementById('frame_input');
+const cropInput = document.getElementById('crop_input');
 const addFrameBtn = document.getElementById('add_frame_btn');
+const addCropBtn = document.getElementById('add_crop_btn');
 const clearFramesBtn = document.getElementById('clear_frames_btn');
 const framesList = document.getElementById('frames_list');
 const gifPreviewCanvas = document.getElementById('gif_preview_canvas');
@@ -11,6 +13,18 @@ const generateGifBtn = document.getElementById('generate_gif_btn');
 const downloadGifBtn = document.getElementById('download_gif_btn');
 const gifOutput = document.getElementById('gif_output');
 const outputGif = document.getElementById('output_gif');
+
+// Crop elements
+const cropModal = document.getElementById('crop_modal');
+const cropImage = document.getElementById('crop_image');
+const cropBox = document.getElementById('crop_box');
+const cropWrapper = document.getElementById('crop_wrapper');
+const originalSizeSpan = document.getElementById('original_size');
+const cropSizeSpan = document.getElementById('crop_size');
+const cancelCropBtn = document.getElementById('cancel_crop_btn');
+const cropAndAddBtn = document.getElementById('crop_and_add_btn');
+const addWithoutCropBtn = document.getElementById('add_without_crop_btn');
+const presetBtns = document.querySelectorAll('.preset_btn');
 
 // Video elements
 const videoInput = document.getElementById('video_input');
@@ -51,6 +65,22 @@ let currentFrameIndex = 0;
 let generatedGifBlob = null;
 let currentVideoFile = null;
 let isExtracting = false;
+
+// Crop state
+let cropState = {
+    images: [], // Queue of images to crop
+    currentIndex: 0,
+    originalImage: null,
+    scale: 1,
+    aspectRatio: null, // null = free, otherwise number like 16/9
+    isDragging: false,
+    isResizing: false,
+    resizeHandle: null,
+    startX: 0,
+    startY: 0,
+    startCrop: { x: 0, y: 0, width: 0, height: 0 },
+    crop: { x: 0, y: 0, width: 0, height: 0 }
+};
 
 const ctx = gifPreviewCanvas.getContext('2d');
 
@@ -514,11 +544,17 @@ async function extractFramesFromVideo() {
 // --- Event Listeners ---
 
 addFrameBtn.addEventListener('click', () => frameInput.click());
+addCropBtn.addEventListener('click', () => cropInput.click());
 addVideoBtn.addEventListener('click', () => videoInput.click());
 
 frameInput.addEventListener('change', (e) => {
     handleFiles(e.target.files);
     frameInput.value = ''; // Reset to allow adding same files again
+});
+
+cropInput.addEventListener('change', (e) => {
+    handleCropFiles(e.target.files);
+    cropInput.value = '';
 });
 
 videoInput.addEventListener('change', (e) => {
@@ -527,6 +563,301 @@ videoInput.addEventListener('change', (e) => {
     }
     videoInput.value = '';
 });
+
+// --- Crop Functions ---
+
+function handleCropFiles(files) {
+    const imageFiles = Array.from(files).filter(f => f.type.startsWith('image/'));
+    if (imageFiles.length === 0) return;
+    
+    cropState.images = [];
+    cropState.currentIndex = 0;
+    
+    // Load all images
+    let loadedCount = 0;
+    imageFiles.forEach((file, index) => {
+        const reader = new FileReader();
+        reader.onload = function(ev) {
+            const img = new Image();
+            img.onload = function() {
+                cropState.images[index] = img;
+                loadedCount++;
+                if (loadedCount === imageFiles.length) {
+                    // All loaded, start cropping
+                    openCropModal(0);
+                }
+            };
+            img.src = ev.target.result;
+        };
+        reader.readAsDataURL(file);
+    });
+}
+
+function openCropModal(index) {
+    if (index >= cropState.images.length) {
+        closeCropModal();
+        return;
+    }
+    
+    cropState.currentIndex = index;
+    cropState.originalImage = cropState.images[index];
+    
+    cropImage.src = cropState.originalImage.src;
+    cropImage.onload = function() {
+        // Calculate scale (how much the displayed image is scaled)
+        cropState.scale = cropImage.naturalWidth / cropImage.width;
+        
+        // Initialize crop to full image
+        cropState.crop = {
+            x: 0,
+            y: 0,
+            width: cropImage.width,
+            height: cropImage.height
+        };
+        
+        updateCropBox();
+        updateCropInfo();
+    };
+    
+    originalSizeSpan.textContent = `Oryginał: ${cropState.originalImage.width} x ${cropState.originalImage.height}`;
+    cropModal.style.display = 'flex';
+    
+    // Reset aspect ratio to free
+    cropState.aspectRatio = null;
+    presetBtns.forEach(btn => btn.classList.remove('active'));
+    document.querySelector('.preset_btn[data-ratio="free"]').classList.add('active');
+}
+
+function closeCropModal() {
+    cropModal.style.display = 'none';
+    cropState.images = [];
+    cropState.currentIndex = 0;
+    cropState.originalImage = null;
+}
+
+function updateCropBox() {
+    const { x, y, width, height } = cropState.crop;
+    cropBox.style.left = x + 'px';
+    cropBox.style.top = y + 'px';
+    cropBox.style.width = width + 'px';
+    cropBox.style.height = height + 'px';
+}
+
+function updateCropInfo() {
+    const realWidth = Math.round(cropState.crop.width * cropState.scale);
+    const realHeight = Math.round(cropState.crop.height * cropState.scale);
+    cropSizeSpan.textContent = `Zaznaczenie: ${realWidth} x ${realHeight}`;
+}
+
+function constrainCrop() {
+    const imgWidth = cropImage.width;
+    const imgHeight = cropImage.height;
+    
+    // Ensure minimum size
+    cropState.crop.width = Math.max(50, cropState.crop.width);
+    cropState.crop.height = Math.max(50, cropState.crop.height);
+    
+    // Constrain to image bounds
+    cropState.crop.x = Math.max(0, Math.min(cropState.crop.x, imgWidth - cropState.crop.width));
+    cropState.crop.y = Math.max(0, Math.min(cropState.crop.y, imgHeight - cropState.crop.height));
+    cropState.crop.width = Math.min(cropState.crop.width, imgWidth - cropState.crop.x);
+    cropState.crop.height = Math.min(cropState.crop.height, imgHeight - cropState.crop.y);
+}
+
+function applyAspectRatio(keepWidth = true) {
+    if (!cropState.aspectRatio) return;
+    
+    const imgWidth = cropImage.width;
+    const imgHeight = cropImage.height;
+    
+    if (keepWidth) {
+        cropState.crop.height = cropState.crop.width / cropState.aspectRatio;
+    } else {
+        cropState.crop.width = cropState.crop.height * cropState.aspectRatio;
+    }
+    
+    // Make sure it fits
+    if (cropState.crop.width > imgWidth) {
+        cropState.crop.width = imgWidth;
+        cropState.crop.height = cropState.crop.width / cropState.aspectRatio;
+    }
+    if (cropState.crop.height > imgHeight) {
+        cropState.crop.height = imgHeight;
+        cropState.crop.width = cropState.crop.height * cropState.aspectRatio;
+    }
+    
+    constrainCrop();
+}
+
+function setAspectRatio(ratio) {
+    presetBtns.forEach(btn => btn.classList.remove('active'));
+    event.target.classList.add('active');
+    
+    if (ratio === 'free') {
+        cropState.aspectRatio = null;
+    } else {
+        const [w, h] = ratio.split(':').map(Number);
+        cropState.aspectRatio = w / h;
+        applyAspectRatio(true);
+        updateCropBox();
+        updateCropInfo();
+    }
+}
+
+function cropAndAddImage() {
+    const { x, y, width, height } = cropState.crop;
+    const scale = cropState.scale;
+    
+    // Create canvas for cropped image
+    const canvas = document.createElement('canvas');
+    canvas.width = Math.round(width * scale);
+    canvas.height = Math.round(height * scale);
+    const ctx = canvas.getContext('2d');
+    
+    // Draw cropped portion
+    ctx.drawImage(
+        cropState.originalImage,
+        Math.round(x * scale), Math.round(y * scale),
+        canvas.width, canvas.height,
+        0, 0,
+        canvas.width, canvas.height
+    );
+    
+    // Create image from canvas
+    const img = new Image();
+    img.onload = function() {
+        addFrame(img);
+        
+        // Move to next image or close
+        if (cropState.currentIndex < cropState.images.length - 1) {
+            openCropModal(cropState.currentIndex + 1);
+        } else {
+            closeCropModal();
+        }
+    };
+    img.src = canvas.toDataURL('image/png');
+}
+
+function addWithoutCrop() {
+    addFrame(cropState.originalImage);
+    
+    // Move to next image or close
+    if (cropState.currentIndex < cropState.images.length - 1) {
+        openCropModal(cropState.currentIndex + 1);
+    } else {
+        closeCropModal();
+    }
+}
+
+// Crop box mouse/touch interactions
+cropBox.addEventListener('mousedown', startDrag);
+cropBox.addEventListener('touchstart', startDrag, { passive: false });
+
+document.querySelectorAll('.crop_handle').forEach(handle => {
+    handle.addEventListener('mousedown', startResize);
+    handle.addEventListener('touchstart', startResize, { passive: false });
+});
+
+document.addEventListener('mousemove', handleDrag);
+document.addEventListener('touchmove', handleDrag, { passive: false });
+
+document.addEventListener('mouseup', stopDrag);
+document.addEventListener('touchend', stopDrag);
+
+function getEventPos(e) {
+    if (e.touches && e.touches.length > 0) {
+        return { x: e.touches[0].clientX, y: e.touches[0].clientY };
+    }
+    return { x: e.clientX, y: e.clientY };
+}
+
+function startDrag(e) {
+    if (e.target.classList.contains('crop_handle')) return;
+    e.preventDefault();
+    
+    const pos = getEventPos(e);
+    cropState.isDragging = true;
+    cropState.startX = pos.x;
+    cropState.startY = pos.y;
+    cropState.startCrop = { ...cropState.crop };
+}
+
+function startResize(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    const pos = getEventPos(e);
+    cropState.isResizing = true;
+    cropState.resizeHandle = e.target.dataset.handle;
+    cropState.startX = pos.x;
+    cropState.startY = pos.y;
+    cropState.startCrop = { ...cropState.crop };
+}
+
+function handleDrag(e) {
+    if (!cropState.isDragging && !cropState.isResizing) return;
+    e.preventDefault();
+    
+    const pos = getEventPos(e);
+    const dx = pos.x - cropState.startX;
+    const dy = pos.y - cropState.startY;
+    
+    if (cropState.isDragging) {
+        cropState.crop.x = cropState.startCrop.x + dx;
+        cropState.crop.y = cropState.startCrop.y + dy;
+        constrainCrop();
+    } else if (cropState.isResizing) {
+        const handle = cropState.resizeHandle;
+        let newCrop = { ...cropState.startCrop };
+        
+        // Handle resize based on which handle is being dragged
+        if (handle.includes('e')) {
+            newCrop.width = cropState.startCrop.width + dx;
+        }
+        if (handle.includes('w')) {
+            newCrop.x = cropState.startCrop.x + dx;
+            newCrop.width = cropState.startCrop.width - dx;
+        }
+        if (handle.includes('s')) {
+            newCrop.height = cropState.startCrop.height + dy;
+        }
+        if (handle.includes('n')) {
+            newCrop.y = cropState.startCrop.y + dy;
+            newCrop.height = cropState.startCrop.height - dy;
+        }
+        
+        // Apply aspect ratio if set
+        if (cropState.aspectRatio) {
+            if (handle.includes('e') || handle.includes('w')) {
+                newCrop.height = newCrop.width / cropState.aspectRatio;
+            } else {
+                newCrop.width = newCrop.height * cropState.aspectRatio;
+            }
+        }
+        
+        cropState.crop = newCrop;
+        constrainCrop();
+    }
+    
+    updateCropBox();
+    updateCropInfo();
+}
+
+function stopDrag() {
+    cropState.isDragging = false;
+    cropState.isResizing = false;
+    cropState.resizeHandle = null;
+}
+
+// Preset buttons
+presetBtns.forEach(btn => {
+    btn.addEventListener('click', () => setAspectRatio(btn.dataset.ratio));
+});
+
+// Crop action buttons
+cancelCropBtn.addEventListener('click', closeCropModal);
+cropAndAddBtn.addEventListener('click', cropAndAddImage);
+addWithoutCropBtn.addEventListener('click', addWithoutCrop);
 
 clearFramesBtn.addEventListener('click', clearAllFrames);
 cancelVideoBtn.addEventListener('click', cancelVideoExtraction);

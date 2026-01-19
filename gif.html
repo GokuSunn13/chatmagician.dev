@@ -57,11 +57,13 @@
                             <h3>Klatki</h3>
                             <div class="frames_actions">
                                 <button id="add_frame_btn" class="action_btn">+ Dodaj obrazy</button>
+                                <button id="add_crop_btn" class="action_btn crop_btn">✂️ Dodaj z przycinaniem</button>
                                 <button id="add_video_btn" class="action_btn video_btn">🎬 Dodaj wideo</button>
                                 <button id="clear_frames_btn" class="action_btn danger">Wyczyść</button>
                             </div>
                         </div>
                         <input type="file" id="frame_input" accept="image/*" multiple style="display:none;">
+                        <input type="file" id="crop_input" accept="image/*" multiple style="display:none;">
                         <input type="file" id="video_input" accept="video/mp4,video/webm,video/ogg,video/*" style="display:none;">
                         
                         <!-- Video extraction settings -->
@@ -90,6 +92,48 @@
                             <div id="extraction_progress" style="display:none;">
                                 <div class="progress_bar"><div class="progress_fill" id="extraction_fill"></div></div>
                                 <span id="extraction_text">Ekstrakcja: 0%</span>
+                            </div>
+                        </div>
+
+                        <!-- Image cropping modal -->
+                        <div id="crop_modal" class="crop_modal" style="display:none;">
+                            <div class="crop_modal_content">
+                                <div class="crop_header">
+                                    <span>✂️ Przycinanie obrazu</span>
+                                    <button id="cancel_crop_btn" class="action_btn small">Anuluj</button>
+                                </div>
+                                <div class="crop_info">
+                                    <span id="original_size">Oryginał: 0 x 0</span>
+                                    <span id="crop_size">Zaznaczenie: 0 x 0</span>
+                                </div>
+                                <div class="crop_presets">
+                                    <label>Proporcje:</label>
+                                    <button class="preset_btn active" data-ratio="free">Dowolne</button>
+                                    <button class="preset_btn" data-ratio="16:9">16:9</button>
+                                    <button class="preset_btn" data-ratio="4:3">4:3</button>
+                                    <button class="preset_btn" data-ratio="1:1">1:1</button>
+                                    <button class="preset_btn" data-ratio="9:16">9:16</button>
+                                </div>
+                                <div class="crop_container">
+                                    <div id="crop_wrapper">
+                                        <img id="crop_image" src="" alt="Crop preview">
+                                        <div id="crop_overlay"></div>
+                                        <div id="crop_box">
+                                            <div class="crop_handle" data-handle="nw"></div>
+                                            <div class="crop_handle" data-handle="ne"></div>
+                                            <div class="crop_handle" data-handle="sw"></div>
+                                            <div class="crop_handle" data-handle="se"></div>
+                                            <div class="crop_handle" data-handle="n"></div>
+                                            <div class="crop_handle" data-handle="s"></div>
+                                            <div class="crop_handle" data-handle="w"></div>
+                                            <div class="crop_handle" data-handle="e"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="crop_actions">
+                                    <button id="crop_and_add_btn" class="action_btn primary">✂️ Przytnij i dodaj</button>
+                                    <button id="add_without_crop_btn" class="action_btn">Dodaj bez przycinania</button>
+                                </div>
                             </div>
                         </div>
                         

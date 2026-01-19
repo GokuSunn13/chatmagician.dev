@@ -540,6 +540,223 @@
     background: rgba(120, 120, 130, 0.9);
 }
 
+/* Crop Button */
+.action_btn.crop_btn {
+    background: rgba(100, 160, 60, 0.9);
+}
+
+.action_btn.crop_btn:hover {
+    background: rgba(120, 180, 70, 0.9);
+}
+
+/* Crop Modal */
+.crop_modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.9);
+    z-index: 1000;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+    box-sizing: border-box;
+}
+
+.crop_modal_content {
+    background: rgba(30, 30, 35, 0.98);
+    border: 1px solid rgba(100, 100, 100, 0.3);
+    border-radius: 12px;
+    padding: 20px;
+    max-width: 95vw;
+    max-height: 95vh;
+    overflow: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.crop_header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-bottom: 10px;
+    border-bottom: 1px solid rgba(100, 100, 100, 0.3);
+    color: #4ade80;
+    font-weight: bold;
+    font-size: 16px;
+}
+
+.crop_info {
+    display: flex;
+    justify-content: center;
+    gap: 30px;
+    color: #aaa;
+    font-size: 13px;
+}
+
+.crop_info span {
+    padding: 5px 12px;
+    background: rgba(50, 50, 55, 0.8);
+    border-radius: 5px;
+}
+
+#crop_size {
+    color: #fbf724;
+    font-weight: bold;
+}
+
+.crop_presets {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.crop_presets label {
+    color: #aaa;
+    font-size: 13px;
+    margin-right: 5px;
+}
+
+.preset_btn {
+    padding: 6px 14px;
+    border: 1px solid rgba(100, 100, 100, 0.5);
+    border-radius: 5px;
+    background: rgba(50, 50, 55, 0.8);
+    color: #ccc;
+    cursor: pointer;
+    font-size: 12px;
+    transition: all 0.2s;
+}
+
+.preset_btn:hover {
+    background: rgba(70, 70, 75, 0.9);
+    border-color: rgba(150, 150, 150, 0.5);
+}
+
+.preset_btn.active {
+    background: rgba(74, 222, 128, 0.2);
+    border-color: #4ade80;
+    color: #4ade80;
+}
+
+.crop_container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: rgba(20, 20, 25, 0.8);
+    border-radius: 8px;
+    padding: 20px;
+    min-height: 300px;
+    max-height: 60vh;
+    overflow: auto;
+}
+
+#crop_wrapper {
+    position: relative;
+    display: inline-block;
+    user-select: none;
+}
+
+#crop_image {
+    display: block;
+    max-width: 100%;
+    max-height: 55vh;
+    pointer-events: none;
+}
+
+#crop_overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.6);
+    pointer-events: none;
+}
+
+#crop_box {
+    position: absolute;
+    border: 2px dashed #4ade80;
+    background: transparent;
+    cursor: move;
+    box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.6);
+    min-width: 50px;
+    min-height: 50px;
+}
+
+.crop_handle {
+    position: absolute;
+    width: 12px;
+    height: 12px;
+    background: #4ade80;
+    border: 2px solid #fff;
+    border-radius: 50%;
+}
+
+.crop_handle[data-handle="nw"] {
+    top: -7px;
+    left: -7px;
+    cursor: nw-resize;
+}
+
+.crop_handle[data-handle="ne"] {
+    top: -7px;
+    right: -7px;
+    cursor: ne-resize;
+}
+
+.crop_handle[data-handle="sw"] {
+    bottom: -7px;
+    left: -7px;
+    cursor: sw-resize;
+}
+
+.crop_handle[data-handle="se"] {
+    bottom: -7px;
+    right: -7px;
+    cursor: se-resize;
+}
+
+.crop_handle[data-handle="n"] {
+    top: -7px;
+    left: 50%;
+    transform: translateX(-50%);
+    cursor: n-resize;
+}
+
+.crop_handle[data-handle="s"] {
+    bottom: -7px;
+    left: 50%;
+    transform: translateX(-50%);
+    cursor: s-resize;
+}
+
+.crop_handle[data-handle="w"] {
+    top: 50%;
+    left: -7px;
+    transform: translateY(-50%);
+    cursor: w-resize;
+}
+
+.crop_handle[data-handle="e"] {
+    top: 50%;
+    right: -7px;
+    transform: translateY(-50%);
+    cursor: e-resize;
+}
+
+.crop_actions {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+    padding-top: 10px;
+}
+
 /* Responsive adjustments */
 @media (max-width: 768px) {
     #gif_settings {
@@ -559,5 +776,13 @@
     .primary_btn {
         width: 100%;
         max-width: 300px;
+    }
+    
+    .crop_presets {
+        flex-direction: column;
+    }
+    
+    .crop_actions {
+        flex-direction: column;
     }
 }
