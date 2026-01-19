@@ -246,7 +246,7 @@ async function generateGif() {
             quality: quality,
             width: width,
             height: height,
-            workerScript: 'https://cdnjs.cloudflare.com/ajax/libs/gif.js/0.2.0/gif.worker.js'
+            workerScript: 'gif.worker.js'
         });
         
         // Create temporary canvas for rendering frames
