@@ -559,9 +559,7 @@ function renderTextBlocksList() {
 // Helper to draw a single text block on canvas
 function drawTextBlock(ctx, block) {
     let text = block.text;
-    if (processTextCheckbox.checked) {
-        text = processText(text);
-    }
+    // Note: processText is called by the caller before passing text to this function
     
     ctx.font = `${settings.fontSize}px ${settings.fontFamily}`;
     ctx.textBaseline = 'top';
