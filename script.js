@@ -556,6 +556,46 @@ function renderTextBlocksList() {
     });
 }
 
+// Helper to wrap text based on available width
+function wrapTextToWidth(ctx, text, startX, maxWidth) {
+    const textLines = (text || '').split('\n');
+    const wrappedLines = [];
+    const availableWidth = maxWidth - startX - 10; // 10px margin from right edge
+    
+    for (let textLine of textLines) {
+        if (textLine === '') {
+            wrappedLines.push('');
+            continue;
+        }
+        
+        // Check if line fits without wrapping
+        const lineWidth = ctx.measureText(textLine).width;
+        if (lineWidth <= availableWidth) {
+            wrappedLines.push(textLine);
+            continue;
+        }
+        
+        // Need to wrap - split by words
+        const words = textLine.split(' ');
+        let currentLine = '';
+        
+        for (let word of words) {
+            const testLine = currentLine + (currentLine ? ' ' : '') + word;
+            const testWidth = ctx.measureText(testLine).width;
+            
+            if (testWidth > availableWidth && currentLine) {
+                wrappedLines.push(currentLine);
+                currentLine = word;
+            } else {
+                currentLine = testLine;
+            }
+        }
+        if (currentLine) wrappedLines.push(currentLine);
+    }
+    
+    return wrappedLines;
+}
+
 // Helper to draw a single text block on canvas
 function drawTextBlock(ctx, block) {
     let text = block.text;
@@ -563,7 +603,10 @@ function drawTextBlock(ctx, block) {
     
     ctx.font = `${settings.fontSize}px ${settings.fontFamily}`;
     ctx.textBaseline = 'top';
-    const lines = (text || '').split('\n');
+    
+    // Auto-wrap text based on image width
+    const imageWidth = viewportSize.width;
+    const lines = wrapTextToWidth(ctx, text, block.x, imageWidth);
     const lineHeight = settings.fontSize + 5;
     
     lines.forEach((line, i) => {
