@@ -227,6 +227,19 @@ function togglePlay() {
     }
 }
 
+// Create worker blob URL to avoid CORS issues
+function createWorkerBlobURL() {
+    // Fetch the worker script and create a blob URL
+    return fetch('gif.worker.js')
+        .then(response => response.text())
+        .then(text => {
+            const blob = new Blob([text], { type: 'application/javascript' });
+            return URL.createObjectURL(blob);
+        });
+}
+
+let workerBlobURL = null;
+
 async function generateGif() {
     if (frames.length === 0) return;
     
@@ -241,12 +254,17 @@ async function generateGif() {
     const loop = gifLoopCheckbox.checked;
     
     try {
+        // Create worker blob URL if not already created
+        if (!workerBlobURL) {
+            workerBlobURL = await createWorkerBlobURL();
+        }
+        
         const gif = new GIF({
             workers: 2,
             quality: quality,
             width: width,
             height: height,
-            workerScript: 'gif.worker.js'
+            workerScript: workerBlobURL
         });
         
         // Create temporary canvas for rendering frames
