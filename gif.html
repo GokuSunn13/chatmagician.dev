@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <link rel="stylesheet" href="style.css">
+        <link rel="stylesheet" href="gif.css">
+        <link rel="icon" type="image/jpg" href="logo.png">
+        <title>ChatMagician - GIF Creator</title>
+    </head>
+    <body>
+        <!-- Navigation icons -->
+        <div class="nav_sidebar">
+            <a href="index.html" class="nav_icon" title="Edytor tekstu">
+                <span>📝</span>
+                <small>Tekst</small>
+            </a>
+            <a href="gif.html" class="nav_icon active" title="Kreator GIF">
+                <span>🎞️</span>
+                <small>GIF</small>
+            </a>
+        </div>
+
+        <div class="main gif_main">
+            <div id="gif_editor">
+                <center>
+                    <h2 class="gif_title">🎞️ Kreator GIF</h2>
+                    
+                    <div id="gif_settings">
+                        <div class="setting_row">
+                            <label for="gif_fps">FPS:</label>
+                            <input type="number" id="gif_fps" min="1" max="60" value="10">
+                        </div>
+                        <div class="setting_row">
+                            <label for="gif_width">Szerokość:</label>
+                            <input type="number" id="gif_width" min="50" max="2000" value="400">
+                        </div>
+                        <div class="setting_row">
+                            <label for="gif_height">Wysokość:</label>
+                            <input type="number" id="gif_height" min="50" max="2000" value="300">
+                        </div>
+                        <div class="setting_row">
+                            <label for="gif_quality">Jakość:</label>
+                            <input type="range" id="gif_quality" min="1" max="20" value="10">
+                            <span id="gif_quality_value">10</span>
+                        </div>
+                        <div class="setting_row checkbox_row">
+                            <label>
+                                <input type="checkbox" id="gif_loop" checked>
+                                Zapętlenie
+                            </label>
+                        </div>
+                    </div>
+
+                    <div id="frames_container">
+                        <div class="frames_header">
+                            <h3>Klatki</h3>
+                            <div class="frames_actions">
+                                <button id="add_frame_btn" class="action_btn">+ Dodaj obrazy</button>
+                                <button id="add_video_btn" class="action_btn video_btn">🎬 Dodaj wideo</button>
+                                <button id="clear_frames_btn" class="action_btn danger">Wyczyść</button>
+                            </div>
+                        </div>
+                        <input type="file" id="frame_input" accept="image/*" multiple style="display:none;">
+                        <input type="file" id="video_input" accept="video/mp4,video/webm,video/ogg,video/*" style="display:none;">
+                        
+                        <!-- Video extraction settings -->
+                        <div id="video_settings" style="display:none;">
+                            <div class="video_settings_header">
+                                <span>🎬 Ustawienia ekstrakcji wideo</span>
+                                <button id="cancel_video_btn" class="action_btn small">Anuluj</button>
+                            </div>
+                            <div class="video_preview_row">
+                                <video id="video_preview" controls></video>
+                            </div>
+                            <div class="video_settings_row">
+                                <label>Początek (s):</label>
+                                <input type="number" id="video_start" min="0" step="0.1" value="0">
+                                <label>Koniec (s):</label>
+                                <input type="number" id="video_end" min="0" step="0.1" value="5">
+                            </div>
+                            <div class="video_settings_row">
+                                <label>Klatki na sekundę:</label>
+                                <input type="number" id="video_extract_fps" min="1" max="30" value="10">
+                                <span id="estimated_frames">~50 klatek</span>
+                            </div>
+                            <div class="video_settings_row">
+                                <button id="extract_frames_btn" class="action_btn primary">📷 Wyodrębnij klatki</button>
+                            </div>
+                            <div id="extraction_progress" style="display:none;">
+                                <div class="progress_bar"><div class="progress_fill" id="extraction_fill"></div></div>
+                                <span id="extraction_text">Ekstrakcja: 0%</span>
+                            </div>
+                        </div>
+                        
+                        <div id="frames_list">
+                            <div class="empty_frames">
+                                <span>📷</span>
+                                <p>Dodaj obrazy lub wideo, aby rozpocząć</p>
+                                <small>Przeciągnij i upuść lub kliknij przyciski powyżej</small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="preview_section">
+                        <h3>Podgląd</h3>
+                        <div id="gif_preview_container">
+                            <canvas id="gif_preview_canvas"></canvas>
+                        </div>
+                        <div id="preview_controls">
+                            <button id="play_btn" class="control_btn">▶️ Odtwórz</button>
+                            <button id="stop_btn" class="control_btn">⏹️ Stop</button>
+                            <span id="frame_counter">Klatka: 0 / 0</span>
+                        </div>
+                    </div>
+
+                    <div id="gif_actions">
+                        <button id="generate_gif_btn" class="primary_btn" disabled>🎬 Generuj GIF</button>
+                        <button id="download_gif_btn" class="primary_btn" disabled>⬇️ Pobierz GIF</button>
+                    </div>
+
+                    <div id="gif_output" style="display:none;">
+                        <h3>Wygenerowany GIF</h3>
+                        <img id="output_gif" src="" alt="Generated GIF">
+                    </div>
+                </center>
+            </div>
+        </div>
+
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/gif.js/0.2.0/gif.js"></script>
+        <script src="gif.js"></script>
+    </body>
+</html>

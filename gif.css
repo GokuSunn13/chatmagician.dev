@@ -1,0 +1,563 @@
+/* GIF Creator specific styles */
+
+.gif_main {
+    padding-top: 20px;
+}
+
+.gif_title {
+    color: #fbf724;
+    font-size: 28px;
+    margin-bottom: 25px;
+    text-shadow: 0 2px 10px rgba(251, 247, 36, 0.3);
+}
+
+#gif_editor {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+/* Settings */
+#gif_settings {
+    background: rgba(30, 30, 35, 0.9);
+    border: 1px solid rgba(100, 100, 100, 0.3);
+    border-radius: 10px;
+    padding: 20px;
+    margin-bottom: 25px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    justify-content: center;
+}
+
+.setting_row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.setting_row label {
+    color: #ccc;
+    font-size: 14px;
+    min-width: 80px;
+}
+
+.setting_row input[type="number"] {
+    width: 70px;
+    padding: 8px 10px;
+    border: 1px solid rgba(100, 100, 100, 0.5);
+    border-radius: 5px;
+    background: rgba(20, 20, 25, 0.9);
+    color: #fff;
+    font-size: 14px;
+}
+
+.setting_row input[type="range"] {
+    width: 100px;
+    cursor: pointer;
+}
+
+.setting_row input[type="number"]:focus {
+    outline: none;
+    border-color: #fbf724;
+}
+
+.checkbox_row label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+}
+
+.checkbox_row input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    cursor: pointer;
+}
+
+#gif_quality_value {
+    color: #fbf724;
+    font-weight: bold;
+    min-width: 25px;
+}
+
+/* Frames container */
+#frames_container {
+    background: rgba(30, 30, 35, 0.9);
+    border: 1px solid rgba(100, 100, 100, 0.3);
+    border-radius: 10px;
+    padding: 20px;
+    margin-bottom: 25px;
+}
+
+.frames_header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid rgba(100, 100, 100, 0.3);
+}
+
+.frames_header h3 {
+    color: #fff;
+    margin: 0;
+    font-size: 18px;
+}
+
+.frames_actions {
+    display: flex;
+    gap: 10px;
+}
+
+.action_btn {
+    padding: 8px 16px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: all 0.2s;
+    background: rgba(60, 60, 70, 0.9);
+    color: #fff;
+}
+
+.action_btn:hover {
+    background: rgba(80, 80, 90, 0.9);
+}
+
+.action_btn.video_btn {
+    background: rgba(60, 100, 160, 0.9);
+}
+
+.action_btn.video_btn:hover {
+    background: rgba(70, 120, 180, 0.9);
+}
+
+.action_btn.primary {
+    background: linear-gradient(135deg, #fbf724, #f0e000);
+    color: #000;
+    font-weight: bold;
+}
+
+.action_btn.primary:hover {
+    box-shadow: 0 3px 12px rgba(251, 247, 36, 0.4);
+}
+
+.action_btn.primary:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.action_btn.small {
+    padding: 5px 12px;
+    font-size: 12px;
+}
+
+.action_btn.danger {
+    background: rgba(180, 60, 60, 0.8);
+}
+
+.action_btn.danger:hover {
+    background: rgba(200, 70, 70, 0.9);
+}
+
+/* Video Settings Panel */
+#video_settings {
+    background: rgba(40, 50, 70, 0.9);
+    border: 2px solid rgba(80, 120, 180, 0.5);
+    border-radius: 10px;
+    padding: 15px;
+    margin-bottom: 15px;
+}
+
+.video_settings_header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid rgba(100, 140, 200, 0.3);
+    color: #7cb3ff;
+    font-weight: bold;
+    font-size: 14px;
+}
+
+.video_preview_row {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 15px;
+}
+
+#video_preview {
+    max-width: 100%;
+    max-height: 200px;
+    border-radius: 8px;
+    border: 1px solid rgba(100, 100, 100, 0.3);
+    background: #000;
+}
+
+.video_settings_row {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 15px;
+    margin-bottom: 12px;
+    flex-wrap: wrap;
+}
+
+.video_settings_row label {
+    color: #aaa;
+    font-size: 13px;
+}
+
+.video_settings_row input[type="number"] {
+    width: 70px;
+    padding: 6px 10px;
+    border: 1px solid rgba(100, 100, 100, 0.5);
+    border-radius: 5px;
+    background: rgba(20, 20, 25, 0.9);
+    color: #fff;
+    font-size: 13px;
+}
+
+.video_settings_row input[type="number"]:focus {
+    outline: none;
+    border-color: #7cb3ff;
+}
+
+#estimated_frames {
+    color: #fbf724;
+    font-weight: bold;
+    font-size: 13px;
+    min-width: 100px;
+}
+
+#extraction_progress {
+    margin-top: 15px;
+    text-align: center;
+}
+
+#extraction_progress .progress_bar {
+    height: 20px;
+    background: rgba(30, 30, 35, 0.9);
+    border-radius: 10px;
+    overflow: hidden;
+    margin-bottom: 8px;
+}
+
+#extraction_progress .progress_fill {
+    height: 100%;
+    background: linear-gradient(90deg, #7cb3ff, #4a90e2);
+    width: 0%;
+    transition: width 0.2s;
+}
+
+#extraction_text {
+    color: #aaa;
+    font-size: 13px;
+}
+
+#frames_list {
+    min-height: 150px;
+    max-height: 300px;
+    overflow-y: auto;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    padding: 10px;
+    background: rgba(20, 20, 25, 0.5);
+    border-radius: 8px;
+    border: 2px dashed rgba(100, 100, 100, 0.3);
+}
+
+#frames_list.drag-over {
+    border-color: #fbf724;
+    background: rgba(251, 247, 36, 0.05);
+}
+
+.empty_frames {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 30px;
+    color: #666;
+}
+
+.empty_frames span {
+    font-size: 48px;
+    margin-bottom: 10px;
+}
+
+.empty_frames p {
+    margin: 5px 0;
+    font-size: 16px;
+}
+
+.empty_frames small {
+    font-size: 12px;
+    color: #555;
+}
+
+.frame_item {
+    position: relative;
+    width: 100px;
+    height: 80px;
+    border-radius: 6px;
+    overflow: hidden;
+    border: 2px solid transparent;
+    cursor: grab;
+    transition: all 0.2s;
+}
+
+.frame_item:hover {
+    border-color: #fbf724;
+}
+
+.frame_item.selected {
+    border-color: #00aaff;
+}
+
+.frame_item img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.frame_item .frame_number {
+    position: absolute;
+    bottom: 2px;
+    left: 2px;
+    background: rgba(0, 0, 0, 0.7);
+    color: #fff;
+    font-size: 10px;
+    padding: 2px 6px;
+    border-radius: 3px;
+}
+
+.frame_item .frame_delete {
+    position: absolute;
+    top: 2px;
+    right: 2px;
+    background: rgba(200, 50, 50, 0.9);
+    color: #fff;
+    border: none;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    cursor: pointer;
+    font-size: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: opacity 0.2s;
+}
+
+.frame_item:hover .frame_delete {
+    opacity: 1;
+}
+
+.frame_item .frame_delete:hover {
+    background: rgba(230, 60, 60, 1);
+}
+
+.frame_item .frame_duration {
+    position: absolute;
+    bottom: 2px;
+    right: 2px;
+    background: rgba(0, 0, 0, 0.7);
+    color: #fbf724;
+    font-size: 9px;
+    padding: 2px 5px;
+    border-radius: 3px;
+}
+
+/* Preview section */
+#preview_section {
+    background: rgba(30, 30, 35, 0.9);
+    border: 1px solid rgba(100, 100, 100, 0.3);
+    border-radius: 10px;
+    padding: 20px;
+    margin-bottom: 25px;
+}
+
+#preview_section h3 {
+    color: #fff;
+    margin: 0 0 15px 0;
+    font-size: 18px;
+}
+
+#gif_preview_container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: rgba(20, 20, 25, 0.8);
+    border-radius: 8px;
+    padding: 20px;
+    min-height: 200px;
+    margin-bottom: 15px;
+}
+
+#gif_preview_canvas {
+    max-width: 100%;
+    border: 1px solid rgba(100, 100, 100, 0.3);
+    border-radius: 4px;
+    background: #000;
+}
+
+#preview_controls {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 15px;
+}
+
+.control_btn {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: all 0.2s;
+    background: rgba(60, 60, 70, 0.9);
+    color: #fff;
+}
+
+.control_btn:hover {
+    background: rgba(80, 80, 90, 0.9);
+}
+
+.control_btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+#frame_counter {
+    color: #aaa;
+    font-size: 14px;
+    min-width: 120px;
+}
+
+/* Actions */
+#gif_actions {
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+    margin-bottom: 25px;
+}
+
+.primary_btn {
+    padding: 15px 30px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 16px;
+    font-weight: bold;
+    transition: all 0.2s;
+    background: linear-gradient(135deg, #fbf724, #f0e000);
+    color: #000;
+}
+
+.primary_btn:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 20px rgba(251, 247, 36, 0.4);
+}
+
+.primary_btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    background: rgba(100, 100, 100, 0.5);
+    color: #666;
+}
+
+/* Output */
+#gif_output {
+    background: rgba(30, 30, 35, 0.9);
+    border: 1px solid rgba(100, 100, 100, 0.3);
+    border-radius: 10px;
+    padding: 20px;
+}
+
+#gif_output h3 {
+    color: #fff;
+    margin: 0 0 15px 0;
+    font-size: 18px;
+}
+
+#output_gif {
+    max-width: 100%;
+    border-radius: 8px;
+    border: 2px solid #fbf724;
+}
+
+/* Progress indicator */
+.gif_progress {
+    width: 100%;
+    max-width: 400px;
+    margin: 20px auto;
+}
+
+.gif_progress .progress_bar {
+    height: 20px;
+    background: rgba(50, 50, 55, 0.9);
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.gif_progress .progress_fill {
+    height: 100%;
+    background: linear-gradient(90deg, #fbf724, #f0e000);
+    width: 0%;
+    transition: width 0.3s;
+}
+
+.gif_progress .progress_text {
+    text-align: center;
+    color: #aaa;
+    font-size: 14px;
+    margin-top: 8px;
+}
+
+/* Scrollbar for frames list */
+#frames_list::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+#frames_list::-webkit-scrollbar-track {
+    background: rgba(30, 30, 35, 0.5);
+    border-radius: 4px;
+}
+
+#frames_list::-webkit-scrollbar-thumb {
+    background: rgba(100, 100, 110, 0.8);
+    border-radius: 4px;
+}
+
+#frames_list::-webkit-scrollbar-thumb:hover {
+    background: rgba(120, 120, 130, 0.9);
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    #gif_settings {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    .setting_row {
+        justify-content: space-between;
+    }
+    
+    #gif_actions {
+        flex-direction: column;
+        align-items: center;
+    }
+    
+    .primary_btn {
+        width: 100%;
+        max-width: 300px;
+    }
+}
