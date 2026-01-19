@@ -963,7 +963,8 @@ function updatePreview() {
         if (multiTextCheckbox.checked) {
             // Draw all text blocks
             textBlocks.forEach(block => {
-                drawTextBlock(ctx, block);
+                const blockText = processTextCheckbox.checked ? processText(block.text) : block.text;
+                drawTextBlock(ctx, { ...block, text: blockText });
             });
         } else {
             // Single text mode - use the main textarea
@@ -1009,7 +1010,8 @@ function createImageWithBackground() {
     // Draw text based on mode
     if (multiTextCheckbox.checked) {
         textBlocks.forEach(block => {
-            drawTextBlock(ctx, block);
+            const blockText = processTextCheckbox.checked ? processText(block.text) : block.text;
+            drawTextBlock(ctx, { ...block, text: blockText });
         });
     } else {
         // Single text mode
