@@ -902,10 +902,20 @@ function parseTextColor(line) {
             color: match[1]
         };
     }
+    // Only color (telefon) yellow if preceded by (Mężczyzna) or (Kobieta)
     if (line.includes('(telefon)')) {
+        // Check if (Mężczyzna) or (Kobieta) is before (telefon) in the same line
+        const before = line.substring(0, line.indexOf('(telefon)'));
+        if (before.includes('(Mężczyzna)') || before.includes('(Kobieta)')) {
+            return {
+                text: line,
+                color: '#fbf724'
+            };
+        }
+        // If not, return default color
         return {
             text: line,
-            color: '#fbf724'
+            color: '#f1f1f1'
         };
     } else if (line.includes('szepcze:')) {
         return {
