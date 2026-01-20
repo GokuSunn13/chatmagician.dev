@@ -14,12 +14,10 @@ const chatMessages = document.getElementById('chat_messages');
 const dwnlTrsBtn = document.getElementById('dwnl_trs');
 const dwnlBcgBtn = document.getElementById('dwnl_bcg');
 const dwnlImgBtn = document.getElementById('dwnl_img');
-const clearAllImagesBtn = document.getElementById('clear_all_images');
 const imageSizeControls = document.getElementById('image_size_controls');
 const imageWidthInput = document.getElementById('image_width');
 const imageHeightInput = document.getElementById('image_height');
 const applySizeBtn = document.getElementById('apply_size');
-const imageEffectsControls = document.getElementById('image_effects_controls');
 const effectBlur = document.getElementById('effect_blur');
 const effectContrast = document.getElementById('effect_contrast');
 const effectSaturation = document.getElementById('effect_saturation');
@@ -43,6 +41,12 @@ const imagesList = document.getElementById('images_list');
 
 // Drawing sidebar elements
 const drawingSidebar = document.getElementById('drawing_sidebar');
+const layersSidebar = document.getElementById('layers_sidebar');
+const effectsSidebar = document.getElementById('effects_sidebar');
+const drawingTabToggle = document.getElementById('drawing_tab_toggle');
+const layersTabToggle = document.getElementById('layers_tab_toggle');
+const effectsModeToggle = document.getElementById('effects_mode_toggle');
+const effectsToggleContainer = document.getElementById('effects_toggle_container');
 const drawingColorInput = document.getElementById('drawing_color');
 const drawingSizeInput = document.getElementById('drawing_size');
 const drawingSizeLabel = document.getElementById('drawing_size_label');
@@ -116,6 +120,11 @@ let settings = {
 
 // --- FUNCTIONS (defined first) ---
 
+// Helper function to build font string (always bold)
+function buildFontString(fontSize, fontFamily) {
+    return `bold ${fontSize}px ${fontFamily}`;
+}
+
 // Function to apply grain effect with colored dots (white, red, blue)
 // Directional blur: 40% horizontal, 60% vertical
 function applyGrain(ctx, width, height, intensity, grainBlur = 0) {
@@ -159,7 +168,7 @@ function applyGrain(ctx, width, height, intensity, grainBlur = 0) {
         
         grainCtx.putImageData(grainImageData, 0, 0);
         
-        // Apply directional blur: 40% horizontal, 60% vertical
+        // Apply directional blur: 10% horizontal, 90% vertical
         // Create horizontal blur by squashing vertically, blurring, then stretching back
         const hBlurCanvas = document.createElement('canvas');
         hBlurCanvas.width = width;
@@ -171,7 +180,7 @@ function applyGrain(ctx, width, height, intensity, grainBlur = 0) {
         hResultCanvas.width = width;
         hResultCanvas.height = height;
         const hResultCtx = hResultCanvas.getContext('2d');
-        hResultCtx.filter = `blur(${grainBlur * 0.4}px)`;
+        hResultCtx.filter = `blur(${grainBlur * 0.1}px)`;
         hResultCtx.drawImage(hBlurCanvas, 0, 0, width, height);
         hResultCtx.filter = 'none';
         
@@ -186,15 +195,15 @@ function applyGrain(ctx, width, height, intensity, grainBlur = 0) {
         vResultCanvas.width = width;
         vResultCanvas.height = height;
         const vResultCtx = vResultCanvas.getContext('2d');
-        vResultCtx.filter = `blur(${grainBlur * 0.6}px)`;
+        vResultCtx.filter = `blur(${grainBlur * 0.9}px)`;
         vResultCtx.drawImage(vBlurCanvas, 0, 0, width, height);
         vResultCtx.filter = 'none';
         
         // Combine horizontal and vertical blur results
         ctx.globalCompositeOperation = 'lighter';
-        ctx.globalAlpha = 0.4;
+        ctx.globalAlpha = 0.1;
         ctx.drawImage(hResultCanvas, 0, 0);
-        ctx.globalAlpha = 0.6;
+        ctx.globalAlpha = 0.9;
         ctx.drawImage(vResultCanvas, 0, 0);
         ctx.globalAlpha = 1;
         ctx.globalCompositeOperation = 'source-over';
@@ -251,12 +260,13 @@ function addImage(img, name) {
         viewportSize = { width: img.width, height: img.height };
         imageWidthInput.value = img.width;
         imageHeightInput.value = img.height;
-        clearAllImagesBtn.style.display = 'inline';
         imageSizeControls.style.display = 'flex';
-        imageEffectsControls.style.display = 'flex';
         imagesContainer.style.display = 'block';
-        dwnlImgBtn.style.display = 'inline';
-        drawingSidebar.style.display = 'flex';
+        dwnlImgBtn.style.display = 'inline-flex';
+        // Show toggles (but sidebars hidden by default)
+        drawingTabToggle.style.display = 'block';
+        layersTabToggle.style.display = 'block';
+        effectsToggleContainer.style.display = 'flex';
         // Auto-create first layer
         if (drawingLayers.length === 0) {
             addLayer('L 1');
@@ -278,15 +288,23 @@ function removeImage(id) {
     
     // Hide controls if no images
     if (images.length === 0) {
-        clearAllImagesBtn.style.display = 'none';
         imageSizeControls.style.display = 'none';
-        imageEffectsControls.style.display = 'none';
         imagesContainer.style.display = 'none';
         dwnlImgBtn.style.display = 'none';
         textBlocksContainer.style.display = 'none';
         inputContainer.style.display = 'block';
         multiTextCheckbox.checked = false;
-        drawingSidebar.style.display = 'none';
+        drawingSidebar.classList.remove('sidebar_visible');
+        drawingSidebar.classList.add('sidebar_hidden');
+        layersSidebar.classList.remove('sidebar_visible');
+        layersSidebar.classList.add('sidebar_hidden');
+        effectsSidebar.style.display = 'none';
+        drawingTabToggle.style.display = 'none';
+        drawingTabToggle.classList.remove('open');
+        layersTabToggle.style.display = 'none';
+        layersTabToggle.classList.remove('open');
+        effectsToggleContainer.style.display = 'none';
+        effectsModeToggle.checked = false;
         // Clear layers when no images
         drawingLayers = [];
         selectedLayerId = null;
@@ -456,7 +474,7 @@ function drawImage(ctx, imgObj, applyFilter = true) {
     const drawH = imgObj.cropH * imgObj.scale;
     
     if (applyFilter && imageEffects.blur > 0) {
-        // Horizontal-only blur: use off-screen canvas technique
+        // Vertical-only blur: use off-screen canvas technique
         const tempCanvas = document.createElement('canvas');
         tempCanvas.width = drawW;
         tempCanvas.height = drawH;
@@ -471,20 +489,21 @@ function drawImage(ctx, imgObj, applyFilter = true) {
         );
         tempCtx.filter = 'none';
         
-        // Create horizontal blur by squashing vertically, blurring, stretching back
-        const squashedHeight = Math.max(1, Math.round(drawH * 0.05));
-        const hBlurCanvas = document.createElement('canvas');
-        hBlurCanvas.width = drawW;
-        hBlurCanvas.height = squashedHeight;
-        const hBlurCtx = hBlurCanvas.getContext('2d');
-        hBlurCtx.drawImage(tempCanvas, 0, 0, drawW, squashedHeight);
+        // Create vertical blur by squashing horizontally, blurring, stretching back
+        const squashedWidth = Math.max(1, Math.round(drawW * 0.1));
+        const vBlurCanvas = document.createElement('canvas');
+        vBlurCanvas.width = squashedWidth;
+        vBlurCanvas.height = drawH;
+        const vBlurCtx = vBlurCanvas.getContext('2d');
+        vBlurCtx.drawImage(tempCanvas, 0, 0, squashedWidth, drawH);
         
         const resultCanvas = document.createElement('canvas');
         resultCanvas.width = drawW;
         resultCanvas.height = drawH;
         const resultCtx = resultCanvas.getContext('2d');
-        resultCtx.filter = `blur(${imageEffects.blur}px)`;
-        resultCtx.drawImage(hBlurCanvas, 0, 0, drawW, drawH);
+        // Reduced blur intensity (multiply by 0.6 for less blur at start)
+        resultCtx.filter = `blur(${imageEffects.blur * 0.6}px)`;
+        resultCtx.drawImage(vBlurCanvas, 0, 0, drawW, drawH);
         resultCtx.filter = 'none';
         
         ctx.globalAlpha = imgObj.opacity / 100;
@@ -644,7 +663,7 @@ function drawTextBlock(ctx, block) {
     let text = block.text;
     // Note: processText is called by the caller before passing text to this function
     
-    ctx.font = `${settings.fontSize}px ${settings.fontFamily}`;
+    ctx.font = buildFontString(settings.fontSize, settings.fontFamily);
     ctx.textBaseline = 'top';
     
     // Auto-wrap text based on image width
@@ -695,7 +714,7 @@ function drawTextBlock(ctx, block) {
 
 // Helper to get text block bounds
 function getTextBlockBounds(ctx, block) {
-    ctx.font = `${settings.fontSize}px ${settings.fontFamily}`;
+    ctx.font = buildFontString(settings.fontSize, settings.fontFamily);
     const lineHeight = settings.fontSize + 5;
     let blockText = block.text;
     if (processTextCheckbox.checked) {
@@ -936,7 +955,7 @@ function createTransparentImage(text) {
     const padding = 13;
     const maxWidth = settings.maxWidth;
     
-    ctx.font = `${fontSize}px ${fontFamily}`;
+    ctx.font = buildFontString(fontSize, fontFamily);
     
     const textLines = text.split('\n');
     const lines = [];
@@ -975,7 +994,7 @@ function createTransparentImage(text) {
     canvas.height = Math.max(lineHeight * lines.length + padding * 2, 50);
     
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-    ctx.font = `${fontSize}px ${fontFamily}`;
+    ctx.font = buildFontString(fontSize, fontFamily);
     ctx.textBaseline = 'top';
     ctx.fillStyle = 'black';
     
@@ -1012,7 +1031,7 @@ function textToImage(text, canvas = null) {
     const padding = 13;
     const maxWidth = settings.maxWidth;
     
-    ctx.font = `${fontSize}px ${fontFamily}`;
+    ctx.font = buildFontString(fontSize, fontFamily);
     
     const textLines = (text || '').split('\n');
     const lines = [];
@@ -1057,7 +1076,7 @@ function textToImage(text, canvas = null) {
     canvas.height = Math.max(lineHeight * lines.length + padding * 2, 50);
     
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-    ctx.font = `${fontSize}px ${fontFamily}`;
+    ctx.font = buildFontString(fontSize, fontFamily);
     ctx.textBaseline = 'top';
     
     // Draw backgrounds
@@ -1242,9 +1261,9 @@ function updatePreview() {
             drawTextBlock(ctx, { id: 0, text: text, x: textPosition.x, y: textPosition.y });
         }
         
-        // Scale preview display to 80% (20% smaller)
-        previewCanvas.style.width = (previewCanvas.width * 0.8) + 'px';
-        previewCanvas.style.height = (previewCanvas.height * 0.8) + 'px';
+        // Scale preview display to 90% (10% smaller)
+        previewCanvas.style.width = (previewCanvas.width * 0.9) + 'px';
+        previewCanvas.style.height = (previewCanvas.height * 0.9) + 'px';
     } else {
         textToImage(text, previewCanvas);
         previewCanvas.style.width = previewCanvas.width + 'px';
@@ -1656,6 +1675,53 @@ bgImageInput.addEventListener('change', function(e) {
 // Text background checkbox
 textBgEnabledCheckbox.addEventListener('change', updatePreview);
 
+// Drawing tab toggle click
+drawingTabToggle.addEventListener('click', function() {
+    const isOpen = this.classList.toggle('open');
+    if (isOpen) {
+        drawingSidebar.classList.remove('sidebar_hidden');
+        drawingSidebar.classList.add('sidebar_visible');
+        // Offset layers sidebar if it's visible
+        if (layersSidebar.classList.contains('sidebar_visible')) {
+            layersSidebar.classList.add('sidebar_offset');
+        }
+    } else {
+        drawingSidebar.classList.remove('sidebar_visible');
+        drawingSidebar.classList.add('sidebar_hidden');
+        // Remove offset from layers sidebar
+        layersSidebar.classList.remove('sidebar_offset');
+        // Deselect drawing tool when hiding
+        currentDrawingTool = null;
+        toolButtons.forEach(btn => btn.classList.remove('active'));
+    }
+});
+
+// Layers tab toggle click
+layersTabToggle.addEventListener('click', function() {
+    const isOpen = this.classList.toggle('open');
+    if (isOpen) {
+        layersSidebar.classList.remove('sidebar_hidden');
+        layersSidebar.classList.add('sidebar_visible');
+        // Add offset if drawing sidebar is visible
+        if (drawingSidebar.classList.contains('sidebar_visible')) {
+            layersSidebar.classList.add('sidebar_offset');
+        }
+    } else {
+        layersSidebar.classList.remove('sidebar_visible');
+        layersSidebar.classList.add('sidebar_hidden');
+        layersSidebar.classList.remove('sidebar_offset');
+    }
+});
+
+// Effects mode toggle
+effectsModeToggle.addEventListener('change', function() {
+    if (this.checked) {
+        effectsSidebar.style.display = 'flex';
+    } else {
+        effectsSidebar.style.display = 'none';
+    }
+});
+
 // Multiple text checkbox
 multiTextCheckbox.addEventListener('change', function() {
     if (this.checked) {
@@ -1671,51 +1737,6 @@ multiTextCheckbox.addEventListener('change', function() {
         textBlocksContainer.style.display = 'none';
         inputContainer.style.display = 'block';
     }
-    updatePreview();
-});
-
-// Clear all images
-clearAllImagesBtn.addEventListener('click', function() {
-    images = [];
-    selectedImageId = null;
-    imageIdCounter = 0;
-    backgroundImg = null;
-    originalBackgroundImg = null;
-    bgImageInput.value = '';
-    clearAllImagesBtn.style.display = 'none';
-    imageSizeControls.style.display = 'none';
-    imageEffectsControls.style.display = 'none';
-    imagesContainer.style.display = 'none';
-    textBlocksContainer.style.display = 'none';
-    inputContainer.style.display = 'block';
-    dwnlImgBtn.style.display = 'none';
-    drawingSidebar.style.display = 'none';
-    textBgEnabledCheckbox.checked = false;
-    multiTextCheckbox.checked = false;
-    // Clear text blocks
-    textBlocks = [];
-    selectedTextBlockId = null;
-    textBlockIdCounter = 0;
-    renderTextBlocksList();
-    renderImagesList();
-    // Clear layers and drawings
-    drawingLayers = [];
-    selectedLayerId = null;
-    layerIdCounter = 0;
-    drawingUndoHistory = [];
-    currentDrawingTool = null;
-    toolButtons.forEach(btn => btn.classList.remove('active'));
-    renderLayersList();
-    // Reset effects
-    imageEffects = { blur: 0, contrast: 100, saturation: 100, brightness: 100, grain: 0, grainBlur: 0 };
-    effectBlur.value = 0; blurValue.textContent = '0';
-    effectContrast.value = 100; contrastValue.textContent = '100';
-    effectSaturation.value = 100; saturationValue.textContent = '100';
-    effectBrightness.value = 100; brightnessValue.textContent = '100';
-    effectGrain.value = 0; grainValue.textContent = '0';
-    effectGrainBlur.value = 0; grainBlurValue.textContent = '0';
-    imagePosition = { x: 0, y: 0 };
-    viewportSize = { width: 800, height: 600 };
     updatePreview();
 });
 

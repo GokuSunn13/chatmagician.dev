@@ -8,6 +8,48 @@
         <title>ChatMagician</title>
     </head>
     <body>
+        <!-- Drawing tab toggle (fixed left edge) -->
+        <button id="drawing_tab_toggle" class="side_tab left_tab" style="display: none;" title="Narzędzia rysowania">
+            <span class="tab_label">Rysuj</span>
+        </button>
+        
+        <!-- Drawing tools sidebar (fixed left edge) -->
+        <div id="drawing_sidebar" class="sidebar_hidden">
+            <div class="tool_grid">
+                <button class="tool_btn" data-tool="pencil" title="Ołówek">✏️</button>
+                <button class="tool_btn" data-tool="brush" title="Pędzel">🖌️</button>
+                <button class="tool_btn" data-tool="eraser" title="Gumka">🧽</button>
+                <button class="tool_btn" data-tool="line" title="Linia">📏</button>
+                <button class="tool_btn" data-tool="rectangle" title="Prostokąt">⬜</button>
+                <button class="tool_btn" data-tool="circle" title="Koło">⭕</button>
+                <button class="tool_btn" data-tool="arrow" title="Strzałka">➡️</button>
+            </div>
+            <div class="tool_options_compact">
+                <input type="color" id="drawing_color" value="#ff0000" title="Kolor">
+                <div class="size_control">
+                    <input type="range" id="drawing_size" min="1" max="30" value="3" title="Grubość">
+                    <span id="drawing_size_label">3</span>
+                </div>
+                <label class="fill_toggle" title="Wypełniony">
+                    <input type="checkbox" id="shape_filled"><span>⬛</span>
+                </label>
+            </div>
+            <button id="clear_drawing" class="clear_btn_compact" title="Wyczyść warstwę">🗑️</button>
+        </div>
+        
+        <!-- Layers tab toggle (fixed left edge) -->
+        <button id="layers_tab_toggle" class="side_tab left_tab" style="display: none;" title="Warstwy">
+            <span class="tab_label">Warstwy</span>
+        </button>
+        
+        <!-- Layers sidebar (fixed left edge) -->
+        <div id="layers_sidebar" class="sidebar_hidden">
+            <div id="layers_container">
+                <div id="layers_list"></div>
+                <button id="add_layer_btn" class="add_layer_btn">+ Nowa</button>
+            </div>
+        </div>
+        
         <!-- Navigation icons -->
         <div class="nav_sidebar">
             <a href="index.html" class="nav_icon active" title="Edytor tekstu">
@@ -52,164 +94,152 @@
         <div class="main">
             <div id="chat_editor">
                 <center>
-                    <div id="settings_container">
-                        <div>
-                            <label for="font_size">Rozmiar:</label>
-                            <input type="number" id="font_size" min="8" max="48" value="12">
-                            <span id="font_size_display">12px</span>
+                    <!-- Step 1: Text Input -->
+                    <div class="ui_section">
+                        <div class="section_header">
+                            <span class="step_number">1</span>
+                            <span class="section_title">Wpisz tekst</span>
                         </div>
-                        <div>
-                            <label for="font_family">Czcionka:</label>
-                            <select id="font_family">
-                                <option value="Arial">Arial</option>
-                                <option value="Verdana">Verdana</option>
-                                <option value="Times New Roman">Times New Roman</option>
-                                <option value="Courier New">Courier New</option>
-                                <option value="Georgia">Georgia</option>
-                                <option value="Trebuchet MS">Trebuchet MS</option>
-                                <option value="Comic Sans MS">Comic Sans MS</option>
-                                <option value="Impact">Impact</option>
-                                <option value="Tahoma">Tahoma</option>
-                            </select>
+                        <div id="input_container">
+                            <textarea id="user_input" placeholder="Wpisz swoją wiadomość tutaj..."></textarea>
                         </div>
-                        <div>
-                            <label for="bg_color">Tło:</label>
-                            <input type="color" id="bg_color" value="#161616">
+                        <div id="text_blocks_container" style="display:none;">
+                            <div id="text_blocks_list"></div>
+                            <button id="add_text_block">+ Dodaj tekst</button>
                         </div>
-                        <div>
-                            <label for="custom_color">Kolor:</label>
-                            <input type="color" id="custom_color" value="#a6a6a6">
-                        </div>
-                        <div>
-                            <label for="process_text">
-                                <input type="checkbox" id="process_text">
-                                Logi z chatu
-                            </label>
-                        </div>
-                    </div>
-                    <div id="text_blocks_container" style="display:none;">
-                        <div id="text_blocks_list"></div>
-                        <button id="add_text_block">+ Dodaj tekst</button>
-                    </div>
-                    <div id="input_container">
-                        <textarea id="user_input" placeholder="Wpisz swoją wiadomość tutaj..."></textarea>
-                    </div>
-                    <div id="image_add_container">
-                        <input type="file" id="bg_image" accept="image/*" style="display:none;">
-                        <button id="bg_image_btn" class="file-button">+ Dodaj obraz</button>
-                        <button id="clear_all_images" style="display:none;">Usuń wszystkie</button>
-                    </div>
-                    <div id="images_container" style="display:none;">
-                        <div id="images_list"></div>
-                    </div>
-                    <div id="image_size_controls" style="display:none;">
-                        <label for="image_width">Rozmiar:</label>
-                        <input type="number" id="image_width" min="100" max="4000" value="800">
-                        <span>x</span>
-                        <input type="number" id="image_height" min="100" max="4000" value="600">
-                        <button id="apply_size">Zastosuj</button>
-                        <label for="text_bg_enabled" style="margin-left: 10px;">
-                            <input type="checkbox" id="text_bg_enabled">
-                            Tło tekstu
-                        </label>
-                        <label for="multi_text_enabled" style="margin-left: 10px;">
-                            <input type="checkbox" id="multi_text_enabled">
-                            Wiele tekstów
-                        </label>
-                    </div>
-                    <div id="image_effects_controls" style="display:none;">
-                        <div class="effect-row">
-                            <label>Rozmycie: <span id="blur_value">0</span>px</label>
-                            <input type="range" id="effect_blur" min="0" max="20" value="0" step="1">
-                        </div>
-                        <div class="effect-row">
-                            <label>Kontrast: <span id="contrast_value">100</span>%</label>
-                            <input type="range" id="effect_contrast" min="0" max="200" value="100" step="5">
-                        </div>
-                        <div class="effect-row">
-                            <label>Nasycenie: <span id="saturation_value">100</span>%</label>
-                            <input type="range" id="effect_saturation" min="0" max="200" value="100" step="5">
-                        </div>
-                        <div class="effect-row">
-                            <label>Jasność: <span id="brightness_value">100</span>%</label>
-                            <input type="range" id="effect_brightness" min="0" max="200" value="100" step="5">
-                        </div>
-                        <div class="effect-row">
-                            <label>Ziarno: <span id="grain_value">0</span>%</label>
-                            <input type="range" id="effect_grain" min="0" max="100" value="0" step="5">
-                        </div>
-                        <div class="effect-row">
-                            <label>Rozmycie ziarna: <span id="grain_blur_value">0</span>px</label>
-                            <input type="range" id="effect_grain_blur" min="0" max="10" value="0" step="1">
-                        </div>
-                        <button id="reset_effects">Resetuj</button>
-                    </div>
-                    <div id="preview_wrapper">
-                        <div id="drawing_sidebar" style="display: none;">
-                            <div class="sidebar_title">Rysowanie</div>
-                            <div class="tool_group">
-                                <button class="tool_btn" data-tool="pencil" title="Ołówek - cienka linia">
-                                    <span>✏️</span>
-                                    <small>Ołówek</small>
-                                </button>
-                                <button class="tool_btn" data-tool="brush" title="Pędzel - gruba linia">
-                                    <span>🖌️</span>
-                                    <small>Pędzel</small>
-                                </button>
-                                <button class="tool_btn" data-tool="eraser" title="Gumka">
-                                    <span>🧽</span>
-                                    <small>Gumka</small>
-                                </button>
+                        
+                        <!-- Text Formatting (inline) -->
+                        <div id="settings_container" class="text_formatting_inline">
+                            <div class="setting_group">
+                                <span class="setting_label">Czcionka</span>
+                                <div class="setting_controls">
+                                    <select id="font_family">
+                                        <option value="Arial">Arial</option>
+                                        <option value="Verdana">Verdana</option>
+                                        <option value="Times New Roman">Times New Roman</option>
+                                        <option value="Courier New">Courier New</option>
+                                        <option value="Georgia">Georgia</option>
+                                        <option value="Trebuchet MS">Trebuchet MS</option>
+                                        <option value="Comic Sans MS">Comic Sans MS</option>
+                                        <option value="Impact">Impact</option>
+                                        <option value="Tahoma">Tahoma</option>
+                                    </select>
+                                    <input type="number" id="font_size" min="8" max="48" value="12" title="Rozmiar czcionki">
+                                    <span id="font_size_display">12px</span>
+                                </div>
                             </div>
-                            <div class="sidebar_title">Kształty</div>
-                            <div class="tool_group">
-                                <button class="tool_btn" data-tool="line" title="Linia">
-                                    <span>📏</span>
-                                    <small>Linia</small>
-                                </button>
-                                <button class="tool_btn" data-tool="rectangle" title="Prostokąt">
-                                    <span>⬜</span>
-                                    <small>Prostokąt</small>
-                                </button>
-                                <button class="tool_btn" data-tool="circle" title="Koło">
-                                    <span>⭕</span>
-                                    <small>Koło</small>
-                                </button>
-                                <button class="tool_btn" data-tool="arrow" title="Strzałka">
-                                    <span>➡️</span>
-                                    <small>Strzałka</small>
-                                </button>
+                            <div class="setting_group">
+                                <span class="setting_label">Kolory</span>
+                                <div class="setting_controls">
+                                    <div class="color_picker_group">
+                                        <input type="color" id="custom_color" value="#a6a6a6" title="Kolor tekstu">
+                                        <small>Tekst</small>
+                                    </div>
+                                    <div class="color_picker_group">
+                                        <input type="color" id="bg_color" value="#161616" title="Tło tekstu">
+                                        <small>Tło</small>
+                                    </div>
+                                </div>
                             </div>
-                            <div class="sidebar_title">Opcje</div>
-                            <div class="tool_options">
-                                <label>
-                                    Kolor:
-                                    <input type="color" id="drawing_color" value="#ff0000">
+                            <div class="setting_group setting_group_narrow">
+                                <span class="setting_label">Opcje</span>
+                                <div class="setting_controls checkbox_column">
+                                    <label for="process_text" title="Odwróć kolejność i usuń daty (dla logów z chatu)">
+                                        <input type="checkbox" id="process_text">
+                                        Logi z chatu
+                                    </label>
+                                    <label for="text_bg_enabled" title="Pokaż tło za tekstem">
+                                        <input type="checkbox" id="text_bg_enabled">
+                                        Tło tekstu
+                                    </label>
+                                    <label for="multi_text_enabled" title="Dodaj wiele bloków tekstu">
+                                        <input type="checkbox" id="multi_text_enabled">
+                                        Wiele tekstów
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Step 2: Preview -->
+                    <div class="ui_section preview_section">
+                        <div class="section_header">
+                            <span class="step_number">2</span>
+                            <span class="section_title">Podgląd</span>
+                            <div class="header_controls">
+                                <label class="drawing_toggle" id="effects_toggle_container" style="display: none;">
+                                    <input type="checkbox" id="effects_mode_toggle">
+                                    <span class="toggle_slider"></span>
+                                    <span class="toggle_label">Efekty</span>
                                 </label>
-                                <label>
-                                    Grubość:
-                                    <input type="range" id="drawing_size" min="1" max="30" value="3">
-                                    <span id="drawing_size_label">3</span>
-                                </label>
-                                <label class="checkbox_label">
-                                    <input type="checkbox" id="shape_filled"> Wypełniony
-                                </label>
-                            </div>
-                            <button id="clear_drawing" class="clear_btn">Wyczyść warstwę</button>
-                            <div class="sidebar_title">Warstwy</div>
-                            <div id="layers_container">
-                                <div id="layers_list"></div>
-                                <button id="add_layer_btn" class="add_layer_btn">+ Nowa warstwa</button>
+                                <div id="image_add_container" class="header_image_controls">
+                                    <input type="file" id="bg_image" accept="image/*" style="display:none;">
+                                    <button id="bg_image_btn" class="header_btn">+ Obraz</button>
+                                </div>
                             </div>
                         </div>
-                        <div id="preview_container">
-                            <canvas id="preview_canvas"></canvas>
+                        <div id="images_container" style="display:none;">
+                            <div id="images_list"></div>
+                            <div id="image_size_controls">
+                                <div class="controls_row">
+                                    <div class="control_group">
+                                        <label>Rozmiar:</label>
+                                        <input type="number" id="image_width" min="100" max="4000" value="800">
+                                        <span>×</span>
+                                        <input type="number" id="image_height" min="100" max="4000" value="600">
+                                        <button id="apply_size" class="small_btn">OK</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div id="preview_wrapper">
+                            <div id="preview_container">
+                                <canvas id="preview_canvas"></canvas>
+                            </div>
+                            
+                            <!-- Effects sidebar (right) -->
+                            <div id="effects_sidebar" style="display: none;">
+                                <div class="sidebar_title">Efekty</div>
+                                <div class="effect-row-vertical">
+                                    <label>Rozmycie: <span id="blur_value">0</span>px</label>
+                                    <input type="range" id="effect_blur" min="0" max="20" value="0" step="1">
+                                </div>
+                                <div class="effect-row-vertical">
+                                    <label>Kontrast: <span id="contrast_value">100</span>%</label>
+                                    <input type="range" id="effect_contrast" min="0" max="200" value="100" step="5">
+                                </div>
+                                <div class="effect-row-vertical">
+                                    <label>Nasycenie: <span id="saturation_value">100</span>%</label>
+                                    <input type="range" id="effect_saturation" min="0" max="200" value="100" step="5">
+                                </div>
+                                <div class="effect-row-vertical">
+                                    <label>Jasność: <span id="brightness_value">100</span>%</label>
+                                    <input type="range" id="effect_brightness" min="0" max="200" value="100" step="5">
+                                </div>
+                                <div class="effect-row-vertical">
+                                    <label>Ziarno: <span id="grain_value">0</span>%</label>
+                                    <input type="range" id="effect_grain" min="0" max="100" value="0" step="5">
+                                </div>
+                                <div class="effect-row-vertical">
+                                    <label>Rozmycie ziarna: <span id="grain_blur_value">0</span>px</label>
+                                    <input type="range" id="effect_grain_blur" min="0" max="10" value="0" step="1">
+                                </div>
+                                <button id="reset_effects" class="clear_btn">↺ Resetuj</button>
+                            </div>
                         </div>
                     </div>
-                    <div id="button_container">
-                        <button id="dwnl_trs">Pobierz przezroczysty</button>
-                        <button id="dwnl_bcg">Pobierz z tłem</button>
-                        <button id="dwnl_img" style="display:none;">Pobierz z obrazem</button>
+                    
+                    <!-- Step 3: Download -->
+                    <div class="ui_section download_section">
+                        <div class="section_header">
+                            <span class="step_number">3</span>
+                            <span class="section_title">Pobierz</span>
+                        </div>
+                        <div id="button_container">
+                            <button id="dwnl_trs" class="download_btn" title="PNG z przezroczystym tłem">Przezroczysty</button>
+                            <button id="dwnl_bcg" class="download_btn" title="PNG z kolorowym tłem">Z tłem</button>
+                            <button id="dwnl_img" class="download_btn primary_download" style="display:none;" title="PNG z obrazem i tekstem">Z obrazem</button>
+                        </div>
                     </div>
                     <div id="chat_container">
                         <div id="chat_messages">
@@ -221,6 +251,13 @@
             </div>
         </div>
 
+        <script>
+            // Toggle collapsible sections
+            function toggleSection(header) {
+                const section = header.parentElement;
+                section.classList.toggle('collapsed');
+            }
+        </script>
         <script src="script.js"></script>
     </body>
 </html>
