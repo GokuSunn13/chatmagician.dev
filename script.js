@@ -132,9 +132,9 @@ function applyGrain(ctx, width, height, intensity, grainBlur = 0) {
         const grainDensity = intensity / 100;
         
         for (let i = 0; i < grainData.length; i += 4) {
-            if (Math.random() < grainDensity * 0.15) {
+            if (Math.random() < grainDensity * 0.4) {
                 const grainType = Math.random();
-                const brightness = 10 + Math.random() * 20;
+                const brightness = 25 + Math.random() * 50;
                 
                 if (grainType < 0.4) {
                     grainData[i] = brightness;
@@ -153,7 +153,7 @@ function applyGrain(ctx, width, height, intensity, grainBlur = 0) {
                     grainData[i + 1] = brightness * 0.7;
                     grainData[i + 2] = 0;
                 }
-                grainData[i + 3] = 180; // Reduced opacity for grain dots
+                grainData[i + 3] = 220; // Higher opacity for grain dots
             }
         }
         
@@ -205,9 +205,9 @@ function applyGrain(ctx, width, height, intensity, grainBlur = 0) {
         const grainDensity = intensity / 100;
         
         for (let i = 0; i < data.length; i += 4) {
-            if (Math.random() < grainDensity * 0.15) {
+            if (Math.random() < grainDensity * 0.4) {
                 const grainType = Math.random();
-                const brightness = 10 + Math.random() * 20;
+                const brightness = 25 + Math.random() * 50;
                 
                 if (grainType < 0.4) {
                     data[i] = Math.min(255, data[i] + brightness);
@@ -452,21 +452,60 @@ function renderImagesList() {
 // Draw a single image with crop
 function drawImage(ctx, imgObj, applyFilter = true) {
     const prevAlpha = ctx.globalAlpha;
-    if (applyFilter) {
-        ctx.filter = `blur(${imageEffects.blur}px) contrast(${imageEffects.contrast}%) saturate(${imageEffects.saturation}%) brightness(${imageEffects.brightness}%)`;
-        ctx.globalAlpha = imgObj.opacity / 100;
-    }
-    // Draw cropped region of image at its position with scale
     const drawW = imgObj.cropW * imgObj.scale;
     const drawH = imgObj.cropH * imgObj.scale;
-    ctx.drawImage(
-        imgObj.img,
-        imgObj.cropX, imgObj.cropY, imgObj.cropW, imgObj.cropH, // Source crop
-        imgObj.x, imgObj.y, drawW, drawH // Destination with scale
-    );
-    if (applyFilter) {
+    
+    if (applyFilter && imageEffects.blur > 0) {
+        // Horizontal-only blur: use off-screen canvas technique
+        const tempCanvas = document.createElement('canvas');
+        tempCanvas.width = drawW;
+        tempCanvas.height = drawH;
+        const tempCtx = tempCanvas.getContext('2d');
+        
+        // Apply other filters except blur
+        tempCtx.filter = `contrast(${imageEffects.contrast}%) saturate(${imageEffects.saturation}%) brightness(${imageEffects.brightness}%)`;
+        tempCtx.drawImage(
+            imgObj.img,
+            imgObj.cropX, imgObj.cropY, imgObj.cropW, imgObj.cropH,
+            0, 0, drawW, drawH
+        );
+        tempCtx.filter = 'none';
+        
+        // Create horizontal blur by squashing vertically, blurring, stretching back
+        const squashedHeight = Math.max(1, Math.round(drawH * 0.05));
+        const hBlurCanvas = document.createElement('canvas');
+        hBlurCanvas.width = drawW;
+        hBlurCanvas.height = squashedHeight;
+        const hBlurCtx = hBlurCanvas.getContext('2d');
+        hBlurCtx.drawImage(tempCanvas, 0, 0, drawW, squashedHeight);
+        
+        const resultCanvas = document.createElement('canvas');
+        resultCanvas.width = drawW;
+        resultCanvas.height = drawH;
+        const resultCtx = resultCanvas.getContext('2d');
+        resultCtx.filter = `blur(${imageEffects.blur}px)`;
+        resultCtx.drawImage(hBlurCanvas, 0, 0, drawW, drawH);
+        resultCtx.filter = 'none';
+        
+        ctx.globalAlpha = imgObj.opacity / 100;
+        ctx.drawImage(resultCanvas, imgObj.x, imgObj.y);
+        ctx.globalAlpha = prevAlpha;
+    } else if (applyFilter) {
+        ctx.filter = `contrast(${imageEffects.contrast}%) saturate(${imageEffects.saturation}%) brightness(${imageEffects.brightness}%)`;
+        ctx.globalAlpha = imgObj.opacity / 100;
+        ctx.drawImage(
+            imgObj.img,
+            imgObj.cropX, imgObj.cropY, imgObj.cropW, imgObj.cropH,
+            imgObj.x, imgObj.y, drawW, drawH
+        );
         ctx.filter = 'none';
         ctx.globalAlpha = prevAlpha;
+    } else {
+        ctx.drawImage(
+            imgObj.img,
+            imgObj.cropX, imgObj.cropY, imgObj.cropW, imgObj.cropH,
+            imgObj.x, imgObj.y, drawW, drawH
+        );
     }
     
     // Draw selection border for selected image
