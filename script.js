@@ -1,4 +1,15 @@
 // --- DOM Elements ---
+// --- DOM Elements ---
+window.addEventListener('DOMContentLoaded', function() {
+    if (effectGrainAlpha && grainAlphaValue) {
+        effectGrainAlpha.addEventListener('input', function() {
+            imageEffects.grainAlpha = parseInt(this.value);
+            grainAlphaValue.textContent = this.value;
+            updatePreview();
+        });
+    }
+    updatePreview();
+});
 const previewCanvas = document.getElementById('preview_canvas');
 const userInput = document.getElementById('user_input');
 const bgImageInput = document.getElementById('bg_image');
@@ -31,6 +42,8 @@ const effectGrain = document.getElementById('effect_grain');
 const grainValue = document.getElementById('grain_value');
 const effectGrainBlur = document.getElementById('effect_grain_blur');
 const grainBlurValue = document.getElementById('grain_blur_value');
+const effectGrainAlpha = document.getElementById('effect_grain_alpha');
+const grainAlphaValue = document.getElementById('grain_alpha_value');
 const textBlocksContainer = document.getElementById('text_blocks_container');
 const textBlocksList = document.getElementById('text_blocks_list');
 const addTextBlockBtn = document.getElementById('add_text_block');
@@ -65,7 +78,7 @@ let viewportSize = { width: 800, height: 600 };
 let isDragging = false;
 let isImageDragging = false;
 let dragOffset = { x: 0, y: 0 };
-let imageEffects = { blur: 0, contrast: 100, saturation: 100, brightness: 100, grain: 0, grainBlur: 0 };
+let imageEffects = { blur: 0, contrast: 100, saturation: 100, brightness: 100, grain: 0, grainBlur: 0, grainAlpha: 50 };
 
 // Multiple images state
 let images = []; // Array of { id, img, x, y, cropX, cropY, cropW, cropH, origW, origH, name, opacity }
@@ -127,7 +140,7 @@ function buildFontString(fontSize, fontFamily) {
 
 // Function to apply grain effect with colored dots (white, red, blue)
 // Directional blur: 40% horizontal, 60% vertical
-function applyGrain(ctx, width, height, intensity, grainBlur = 0) {
+function applyGrain(ctx, width, height, intensity, grainBlur = 0, grainAlpha = 50) {
     // If blur is needed, draw grain on a separate canvas first
     if (grainBlur > 0) {
         const grainCanvas = document.createElement('canvas');
@@ -162,7 +175,7 @@ function applyGrain(ctx, width, height, intensity, grainBlur = 0) {
                     grainData[i + 1] = brightness * 0.7;
                     grainData[i + 2] = 0;
                 }
-                grainData[i + 3] = 220; // Higher opacity for grain dots
+                grainData[i + 3] = Math.round(255 * (grainAlpha / 100)); // Use grainAlpha for opacity
             }
         }
         
@@ -201,9 +214,9 @@ function applyGrain(ctx, width, height, intensity, grainBlur = 0) {
         
         // Combine horizontal and vertical blur results
         ctx.globalCompositeOperation = 'lighter';
-        ctx.globalAlpha = 0.1;
+        ctx.globalAlpha = 0.07;
         ctx.drawImage(hResultCanvas, 0, 0);
-        ctx.globalAlpha = 0.9;
+        ctx.globalAlpha = 0.5;
         ctx.drawImage(vResultCanvas, 0, 0);
         ctx.globalAlpha = 1;
         ctx.globalCompositeOperation = 'source-over';
@@ -217,17 +230,17 @@ function applyGrain(ctx, width, height, intensity, grainBlur = 0) {
             if (Math.random() < grainDensity * 0.4) {
                 const grainType = Math.random();
                 const brightness = 25 + Math.random() * 50;
-                
+                const alpha = (grainAlpha / 100);
                 if (grainType < 0.4) {
-                    data[i] = Math.min(255, data[i] + brightness);
-                    data[i + 1] = Math.min(255, data[i + 1] + brightness);
-                    data[i + 2] = Math.min(255, data[i + 2] + brightness);
+                    data[i] = Math.round(data[i] * (1 - alpha) + brightness * alpha);
+                    data[i + 1] = Math.round(data[i + 1] * (1 - alpha) + brightness * alpha);
+                    data[i + 2] = Math.round(data[i + 2] * (1 - alpha) + brightness * alpha);
                 } else if (grainType < 0.6) {
-                    data[i] = Math.min(255, data[i] + brightness);
+                    data[i] = Math.round(data[i] * (1 - alpha) + brightness * alpha);
                 } else if (grainType < 0.8) {
-                    data[i + 2] = Math.min(255, data[i + 2] + brightness);
+                    data[i + 2] = Math.round(data[i + 2] * (1 - alpha) + brightness * alpha);
                 } else {
-                    data[i + 1] = Math.min(255, data[i + 1] + brightness * 0.7);
+                    data[i + 1] = Math.round(data[i + 1] * (1 - alpha) + brightness * 0.7 * alpha);
                 }
             }
         }
@@ -1242,7 +1255,7 @@ function updatePreview() {
         
         // Apply grain effect
         if (imageEffects.grain > 0) {
-            applyGrain(ctx, previewCanvas.width, previewCanvas.height, imageEffects.grain, imageEffects.grainBlur);
+            applyGrain(ctx, previewCanvas.width, previewCanvas.height, imageEffects.grain, imageEffects.grainBlur, imageEffects.grainAlpha);
         }
         
         // Draw all saved drawings
@@ -1301,7 +1314,7 @@ function createImageWithBackground() {
     
     // Apply grain effect
     if (imageEffects.grain > 0) {
-        applyGrain(ctx, canvas.width, canvas.height, imageEffects.grain, imageEffects.grainBlur);
+        applyGrain(ctx, canvas.width, canvas.height, imageEffects.grain, imageEffects.grainBlur, imageEffects.grainAlpha);
     }
     
     // Draw all drawings
