@@ -696,19 +696,8 @@ function drawTextBlock(ctx, block) {
             ctx.fillRect(block.x - bgPadding, y - bgPadding, textWidth + bgPadding * 2, settings.fontSize + bgPadding * 2);
         }
         
-        // Draw sharp text outline by rendering text offset in 8 directions
-        ctx.fillStyle = 'black';
-        for (let dx = -1; dx <= 1; dx++) {
-            for (let dy = -1; dy <= 1; dy++) {
-                if (dx !== 0 || dy !== 0) {
-                    ctx.fillText(parsedLine.text, block.x + dx, y + dy);
-                }
-            }
-        }
-        
-        // Draw text fill with parsed color
-        ctx.fillStyle = parsedLine.color;
-        ctx.fillText(parsedLine.text, block.x, y);
+        // Draw text with inline color segments
+        drawTextWithSegments(ctx, parsedLine, block.x, y, true);
     });
     
     // Draw selection indicator for selected block
@@ -904,57 +893,109 @@ function applySnapping(ctx, block) {
     });
 }
 
-// Function to parse text and return {text, color}
+// Function to parse text and return {text, color, segments}
+// segments is an array of {text, color} for inline formatting
 function parseTextColor(line) {
+    // Transform <text> to *text* (replace angle brackets with asterisks)
+    line = line.replace(/<([^>]+)>/g, '*$1*');
+    
     // Check for custom color markup: [color=#hex]...[/color]
     const colorTagRegex = /^\[color=(#[0-9a-fA-F]{3,6})\](.*)\[\/color\]$/;
     const match = line.match(colorTagRegex);
     if (match) {
         return {
             text: match[2],
-            color: match[1]
+            color: match[1],
+            segments: [{ text: match[2], color: match[1] }]
         };
     }
+    
+    // Determine base color for the line
+    let baseColor = '#f1f1f1';
+    
     // Only color (telefon) yellow if preceded by (Mężczyzna) or (Kobieta)
     if (line.includes('(telefon)')) {
-        // Check if (Mężczyzna) or (Kobieta) is before (telefon) in the same line
         const before = line.substring(0, line.indexOf('(telefon)'));
         if (before.includes('(Mężczyzna)') || before.includes('(Kobieta)')) {
-            return {
-                text: line,
-                color: '#fbf724'
-            };
+            baseColor = '#fbf724';
         }
-        // If not, return default color
-        return {
-            text: line,
-            color: '#f1f1f1'
-        };
     } else if (line.includes('szepcze:')) {
-        return {
-            text: line,
-            color: '#a6a6a6'
-        };
+        baseColor = '#a6a6a6';
     } else if (/\$\d+/.test(line)) {
-        return {
-            text: line,
-            color: '#56d64b'
-        };
+        baseColor = '#56d64b';
     } else if (line.startsWith('**')) {
-        return {
-            text: line,
-            color: '#979aed'
-        };
+        baseColor = '#979aed';
     } else if (line.startsWith('*')) {
-        return {
-            text: line,
+        baseColor = '#c2a3da';
+    }
+    
+    // Parse inline *text* patterns for segments
+    const segments = [];
+    const inlineRegex = /\*([^*]+)\*/g;
+    let lastIndex = 0;
+    let inlineMatch;
+    
+    while ((inlineMatch = inlineRegex.exec(line)) !== null) {
+        // Add text before the match
+        if (inlineMatch.index > lastIndex) {
+            segments.push({
+                text: line.substring(lastIndex, inlineMatch.index),
+                color: baseColor
+            });
+        }
+        // Add the matched *text* with /me color
+        segments.push({
+            text: '*' + inlineMatch[1] + '*',
             color: '#c2a3da'
-        };
-    } else {
-        return {
-            text: line,
-            color: '#f1f1f1'
-        };
+        });
+        lastIndex = inlineMatch.index + inlineMatch[0].length;
+    }
+    
+    // Add remaining text after last match
+    if (lastIndex < line.length) {
+        segments.push({
+            text: line.substring(lastIndex),
+            color: baseColor
+        });
+    }
+    
+    // If no inline matches, return single segment with base color
+    if (segments.length === 0) {
+        segments.push({ text: line, color: baseColor });
+    }
+    
+    return {
+        text: line,
+        color: baseColor,
+        segments: segments
+    };
+}
+
+// Helper function to draw text with inline color segments
+function drawTextWithSegments(ctx, parsedLine, x, y, drawOutline = true) {
+    let currentX = x;
+    
+    // Draw outline for all segments
+    if (drawOutline) {
+        ctx.fillStyle = 'black';
+        let outlineX = x;
+        for (const segment of parsedLine.segments) {
+            for (let dx = -1; dx <= 1; dx++) {
+                for (let dy = -1; dy <= 1; dy++) {
+                    if (dx !== 0 || dy !== 0) {
+                        ctx.fillText(segment.text, outlineX + dx, y + dy);
+                    }
+                }
+            }
+            outlineX += ctx.measureText(segment.text).width;
+        }
+    }
+    
+    // Draw each segment with its color
+    for (const segment of parsedLine.segments) {
+        ctx.fillStyle = segment.color;
+        ctx.fillText(segment.text, currentX, y);
+        currentX += ctx.measureText(segment.text).width;
     }
 }
 
@@ -1019,23 +1060,10 @@ function createTransparentImage(text) {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     ctx.font = buildFontString(fontSize, fontFamily);
     ctx.textBaseline = 'top';
-    ctx.fillStyle = 'black';
     
     lines.forEach((line, index) => {
         const parsedLine = parseTextColor(line);
-        for (let dx = -1; dx <= 1; dx++) {
-            for (let dy = -1; dy <= 1; dy++) {
-                if (dx !== 0 || dy !== 0) {
-                    ctx.fillText(parsedLine.text, padding + dx, padding + index * lineHeight + dy);
-                }
-            }
-        }
-    });
-    
-    lines.forEach((line, index) => {
-        const parsedLine = parseTextColor(line);
-        ctx.fillStyle = parsedLine.color;
-        ctx.fillText(parsedLine.text, padding, padding + index * lineHeight);
+        drawTextWithSegments(ctx, parsedLine, padding, padding + index * lineHeight, true);
     });
     
     return canvas;
@@ -1113,24 +1141,10 @@ function textToImage(text, canvas = null) {
         }
     });
     
-    // Draw outlines
-    ctx.fillStyle = 'black';
+    // Draw text with inline color segments
     lines.forEach((line, index) => {
         const parsedLine = parseTextColor(line);
-        for (let dx = -1; dx <= 1; dx++) {
-            for (let dy = -1; dy <= 1; dy++) {
-                if (dx !== 0 || dy !== 0) {
-                    ctx.fillText(parsedLine.text, padding + dx, padding + index * lineHeight + dy);
-                }
-            }
-        }
-    });
-    
-    // Draw text
-    lines.forEach((line, index) => {
-        const parsedLine = parseTextColor(line);
-        ctx.fillStyle = parsedLine.color;
-        ctx.fillText(parsedLine.text, padding, padding + index * lineHeight);
+        drawTextWithSegments(ctx, parsedLine, padding, padding + index * lineHeight, true);
     });
     
     return canvas;
